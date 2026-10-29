@@ -1,6 +1,6 @@
 # Copilot Instructions
 
-> 本文件仅适用于 **PidanUIWebsite_VitePress**（PidanUI 官网）仓库，请勿套用到其他相关项目（如 StarLight-7693-New、EggyUI 系列）。
+> 本文件仅适用于 **PidanUI-Website**（PidanUI 官网）仓库，请勿套用到其他相关项目（如 StarLight-7693-New、EggyUI 系列）。
 
 ## 项目指南
 
@@ -97,7 +97,7 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 ## 样式约定
 
 - 样式分两层：全局在 `app/assets/styles/`（`main.css` 入口 → `tokens` / `base` / `layout` / `shell` / `prose` / `animation`），页面与组件样式写在各自 `.vue` 的 `<style scoped>`，**一律原生 CSS + Tailwind 工具类**，无预处理器。
-- 组件层用 Nuxt UI（`UButton` / `UCard` / `UBadge` / `UModal` / `UAccordion` / `USkeleton`…），**能靠组件表达的外观不要再手写 CSS**。
+- 组件层用 Nuxt UI（`UButton` / `UBadge` / `UModal` / `USkeleton` / `UKbd` / `UCard`，以及列表页的 `UPageHeader` / `UPageGrid` / `UPageCard`、归档折叠的 `UCollapsible`），**能靠组件表达的外观不要再手写 CSS**。
 - `main.css` 顶部五条铁律：`@import` 全部置顶；Tailwind 两条排在项目文件之前；`@import "@nuxt/ui"` 必须排在 `tokens.css` 之前（它自带只认 `.dark` 的 `@custom-variant dark`，要被我们的三路版本覆盖）；**不引入 Preflight**（保留 `base.css` 自己的重置）；`@theme` / `@custom-variant` 只写在 `tokens.css`。
 - `base.css` 的全局 reset **必须待在 `@layer base` 里**：未分层规则（如 `* { margin:0; padding:0 }`）会压过所有 utilities，导致 Nuxt UI 组件的 `py-*` / `mt-auto` 全部失效。
 - `tokens.css` 用 `@theme static` 定义令牌。注意三处「清空命名空间」的连带后果，新增色/圆角时必须补齐：
@@ -117,8 +117,10 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 
 ## Markdown 渲染（@nuxt/content）
 
-- `app/components/content/Prose*.vue` 复刻了 VitePress 时期的 DOM 契约，`app/assets/styles/prose.css` 的排版依赖它：
-  - `ProsePre` 必须输出 `div.language-* > button.copy + span.lang + pre.shiki`，复制按钮逻辑靠这个结构定位；
+- `app/components/content/Prose*.vue` 定义了正文里标题与代码块的 DOM 契约，`app/assets/styles/prose.css` 的排版直接依赖它（改结构必须同步改样式）：
+  - `ProsePre` 输出 `div.code-block.language-* > .code-head(span.lang + button.copy) + pre.shiki`：
+    语言标签在信息栏内（不是左上角角标），信息栏 `position: sticky`；
+    复制逻辑靠 `button.copy` + `div[class*="language-"] pre code` 定位，**这两个契约名不能改**；
   - `ProseH2/H3` 输出 `<h2 :id><slot/><a class="header-anchor">`，标题锚点图标是 `::before` + 内联 SVG mask（`--icon-link`）画的；
   - 新增 Prose 覆盖（如 `ProseTable`）放同一目录，文件名即组件名。
 - Shiki 双主题配置必须是 `highlight.theme = { light, dark }`（键名决定产物里的 `--shiki-light/--shiki-dark`），**不要用 `default`**，否则深色代码块会失去高亮。
@@ -129,8 +131,9 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 ## 字体与图标
 
 - 字体走 CDN（见 `nuxt.config.ts` 的 `app.head`），**仓库不保留任何字体文件**：
-  - MiSans（`misans-webfont@4.3.1`）—— 正文与 UI；
+  - HarmonyOS Sans SC（`harmonyos-sans-sc-webfont-splitted@1.1.0` 的 `Regular` / `Medium` / `Bold` 三个 unicode-range 分片）—— 正文与 UI；
   - Cascadia Code（`@fontsource/cascadia-code@5.2.3`）—— 代码块等宽英文字体。
+- **MiSans 已彻底移除**（连同 `misans-webfont` 依赖与相关 `<link>`）：不要再把它加回回退链或引入同名包，正文栈以 `--font-ui` 为准。
 - 图标统一用 `<UIcon name="i-lucide-xxx" />`（品牌图标 `i-simple-icons-xxx`），已**不再使用 Font Awesome**。图标集以 `@iconify-json/lucide` / `@iconify-json/simple-icons` 本地安装，构建期内联为 SVG，运行时不请求 Iconify API。
 - **新增图标必须同步 `nuxt.config.ts` 的 `icon.clientBundle.icons`**（写 `lucide:xxx` / `simple-icons:xxx`）：`scan` 只认模板里的字面量，`:name` 动态绑定的图标不登记就会退化成运行时取图。
 - `app.config.ts` 里的 `icon.mode: 'svg'` 保证输出内联 `<svg>`，别改成 `css`（否则首屏只有空占位，等客户端拿到图标数据才有内容）。
@@ -159,12 +162,21 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 - 服务端路由里查询内容库必须 `queryCollection(event, 'posts')`（带 event）；文件名不要写 `[slug].json.ts` 这种「参数 + 点后缀」组合，Nitro 会把后缀并进参数——需要 JSON 后缀时用 `<dir>/index.json.ts`。
 - `nuxt generate` 之后不要再跑 `nuxt preview`（静态预设没有 server 产物）。
 
-## Git 与协作
+## Git 与协作（外部贡献者）
 
-- 提交信息用中文，`feat:` / `fix:` / `style:` / `chore:` / `docs:` 前缀，一句话说明做了什么。
-- PR 从 fork `ColdFieldObserver:main` 发往 `PidanEggyTeam:main`（`gh pr create --repo PidanEggyTeam/PidanUI-Website --base main --head ColdFieldObserver:main`）。
-- 创建跨 fork PR 前确认 `gh auth status` 的活动账号不是组织账号（组织账号会报 `Fork collab can't be granted`），必要时 `gh auth switch -u ColdFieldObserver`。
-- 中文提交信息请写入 UTF-8（无 BOM）文件后用 `git commit -F`，避免编码错乱成 `??`。
+维护者的发布流程写在 `.github/workflows/deploy.yml`，本节只约束**外部贡献者（含其使用的 AI 代理）**。
+
+- **不要直接向主仓库的 `main` 推送**：一律「分支 + PR」，`main` 只接受合并。
+- 分支命名 `feat/<简述>` / `fix/<简述>` / `docs/<简述>`；同一主题的多次提交留在同一分支，不要为每个小改动开新 PR。
+- **每个提交都要能独立 `pnpm build` 通过**。改版类改动按「可回滚单元」拆（先换组件、再调样式、最后补文档），便于二分定位与单独 revert。
+- 提交信息用中文，`feat:` / `fix:` / `style:` / `chore:` / `docs:` 前缀；正文说清「为什么这么做、影响面是什么」，不要复述 diff。中文信息写入 UTF-8（无 BOM）文件后 `git commit -F`，避免编码错乱。
+- PR 指向 **`PidanEggyTeam/PidanUI-Website` 的 `main`**，从自己的 fork 发起。描述里写：改动范围、取舍理由、验证方式（`pnpm build` 结果 + 浏览器看过的页面），以及是否触及下面「不要动」的清单。
+- **不要动**（属发布链路与站点身份，需先开 issue 讨论）：`.github/workflows/`；`nuxt.config.ts` 的 `nitro` / `icon` / `ui.theme.colors`；`shared/site.ts` 的 `SITE` 常量；`public/` 下的图片与 giscus 主题文件。
+- 依赖变更必须同时提交 `pnpm-lock.yaml`（CI 用 `--frozen-lockfile`）；新增需要构建脚本的依赖要在 `pnpm-workspace.yaml` 的 `allowBuilds` 里放行。
+- 不要提交产物与临时文件（`.nuxt/`、`.output/`、`.data/`、`debug.log`）；不要为了本地调试临时改 `PAGE_SIZE`、`failOnError` 这类配置后忘记还原——PR 里出现这类残留会被要求回退。
+- 不要对已推送的公共分支 `rebase` / `force-push`；同步上游用 merge。
+- 视觉改动请附截图：浅色 + 深色、桌面 + ≤960px 各一组。
+- 不要自行合并自己的 PR（但是自己合并自己的 fork 仓库上的 PR 这种情况除外，特别是当自己想要在给主仓库开 PR 前压缩提交记录的时候）；有疑问在 issue 或 PR 评论里问。
 
 ## 提交前自检清单
 
