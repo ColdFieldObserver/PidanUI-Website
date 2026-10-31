@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useTheme } from '~/composables/useTheme';
 
 // ============================================================
@@ -41,6 +41,15 @@ const status = ref<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 
 const { resolvedDark } = useTheme();
 const route = useRoute();
+
+// SSR 阶段读不到 prefers-color-scheme，resolvedDark 恒为 false；客户端首帧可能
+// 直接是 true，class 一旦参与渲染就会触发 hydration 不一致。
+// 因此首帧不带深色标记，挂载后再跟随真实主题。
+const themeReady = ref(false);
+onMounted(() => {
+  themeReady.value = true;
+});
+const darkClass = computed(() => themeReady.value && resolvedDark.value);
 
 let scriptEl: HTMLScriptElement | null = null;
 let intersectionObserver: IntersectionObserver | null = null;
@@ -250,7 +259,7 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 插件容器：脚本会在此插入 div[data-ltf-flag]（位于 script 之前） -->
-    <div ref="host" class="flag-widget" :class="{ 'flag-widget--dark': resolvedDark }" />
+    <div ref="host" class="flag-widget" :class="{ 'flag-widget--dark': darkClass }" />
 
     <p v-if="status === 'failed'" class="flag-failed">
       访客统计暂时不可用
@@ -364,8 +373,12 @@ onBeforeUnmount(() => {
 
    :deep() 是必需的：插件节点由脚本动态插入，不带本组件的 data-v 标记。
    ------------------------------------------------------------ */
-/* 根容器：底 / 描边 / 正文色 / 圆角 */
+/* 根容器：底 / 描边 / 正文色 / 圆角
+   宽度由脚本按加载时量到的像素写死，这里强制跟随列宽（内部是 1fr 网格，
+   收缩不会破版），否则从宽屏缩到窄屏会把整行撑出视口 */
 .flag-widget :deep([data-ltf-flag]) {
+  width: 100% !important;
+  max-width: 100% !important;
   background: var(--card) !important;
   border-color: var(--line) !important;
   border-radius: var(--radius-s);

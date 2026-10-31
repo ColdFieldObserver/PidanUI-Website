@@ -182,7 +182,9 @@ function bindAnchorScroll(): void {
     event.preventDefault();
     suppressHashChangeUntil = performance.now() + 150;
     try {
-      history.replaceState(null, '', hash);
+      // 必须带上 router 的 state：裸 replaceState 会把它整块覆盖，
+      // vue-router 之后读不到自己写入的 position/scroll 信息（R0121 警告）
+      history.replaceState({ ...history.state }, '', hash);
     } catch {
       // history 不可用时仍继续手动滚动
     }
@@ -193,7 +195,7 @@ function bindAnchorScroll(): void {
     if (performance.now() < suppressHashChangeUntil) return;
     scrollToAnchor(window.location.hash);
   });
-  // 跨页带 hash 的导航：vue-router 不会派发 hashchange，由 router.options.ts 转发
+  // 跨页带 hash 的导航：vue-router 不会派发 hashchange，由 layout 的 page:finish 转发
   document.addEventListener('pidan:anchor', (event) => {
     const hash = (event as CustomEvent<string>).detail ?? '';
     scrollToAnchor(hash, false);

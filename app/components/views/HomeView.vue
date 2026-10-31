@@ -19,10 +19,13 @@ const team = TEAM_MEMBERS.map((member) => ({
 
 <template>
   <div class="mx-auto max-w-page">
-    <!-- Hero：左侧项目名 / 简介 / 下载按钮，右侧宣传图 -->
+    <!-- Hero：左侧项目名 / 简介 / 下载按钮，右侧宣传图。
+         UPageHero 在 horizontal 下的两列分别是「wrapper（标题/描述/按钮）」与
+         默认插槽，因此宣传图必须走默认插槽 —— 放进 #body 会被塞进左列底部，
+         右列留空。 -->
     <UPageHero
       orientation="horizontal"
-      :ui="{ container: 'py-8 sm:py-12 lg:py-16 gap-10 lg:gap-14', body: 'lg:order-last' }"
+      :ui="{ container: 'py-8 sm:py-12 lg:py-16 gap-10 lg:gap-14' }"
     >
       <template #headline>
         <UBadge variant="soft" color="primary" size="md" label="非盈利 · 粉丝二创" />
@@ -51,19 +54,17 @@ const team = TEAM_MEMBERS.map((member) => ({
         <UButton to="/posts/" size="lg" variant="outline" color="neutral" label="查看新闻" />
       </template>
 
-      <template #body>
-        <div class="overflow-hidden rounded-2xl ring-1 ring-default shadow-float">
-          <img
-            class="aspect-[4/3] w-full object-cover"
-            :src="PROMO_IMAGE"
-            alt="PidanUI 宣传图"
-            width="960"
-            height="720"
-            decoding="async"
-            fetchpriority="high"
-          />
-        </div>
-      </template>
+      <div class="overflow-hidden rounded-2xl shadow-float ring-1 ring-default">
+        <img
+          class="aspect-video w-full object-cover"
+          :src="PROMO_IMAGE"
+          alt="PidanUI 宣传图"
+          width="960"
+          height="540"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </div>
     </UPageHero>
 
     <!-- 重要说明 -->

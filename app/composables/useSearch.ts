@@ -48,5 +48,6 @@ export function writeKeywordToUrl(): void {
   const q = searchKeyword.value.trim();
   if (q) url.searchParams.set('q', q);
   else url.searchParams.delete('q');
-  window.history.replaceState(null, '', url);
+  // 保留 router 写入的 state，否则 vue-router 会报 R0121
+  window.history.replaceState({ ...history.state }, '', url);
 }

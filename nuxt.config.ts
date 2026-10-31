@@ -160,6 +160,8 @@ export default defineNuxtConfig({
         'lucide:menu',
         'lucide:monitor',
         'lucide:moon',
+        'lucide:sun',
+        'lucide:sun-moon',
         'lucide:newspaper',
         'lucide:rotate-ccw',
         'lucide:rss',

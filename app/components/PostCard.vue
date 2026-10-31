@@ -34,9 +34,13 @@ const CARD_UI = {
     'group w-full overflow-hidden rounded-xl border border-ink-300/60 bg-transparent ' +
     'transition-[border-color,box-shadow] duration-200 hover:border-brand-600/40 ' +
     'hover:shadow-card dark:border-default',
-  header: 'relative w-full overflow-hidden bg-muted',
-  image: 'h-full w-full object-cover transition-transform duration-300 group-hover/blog-post:scale-[1.04]',
-  body: 'p-4',
+  // 头图与下载页版本卡片一致：16:9 通栏、直角、无内投影（主题 naked 变体给的
+  // shadow-lg / rounded-lg 会在卡片里描出一圈内影），也不做 hover 缩放。
+  header: 'relative aspect-video w-full overflow-hidden rounded-none bg-muted shadow-none',
+  image: 'h-full w-full object-cover',
+  // 内边距放在插槽内容上而不是 #body：主题给 body 打了 sm:p-0，
+  // 工具类的 p-* 会输给同一个变体下的 sm:p-0
+  body: 'p-0',
 } as const;
 </script>
 
@@ -57,8 +61,8 @@ const CARD_UI = {
          整块走 #body 插槽，一是保证 DOM 顺序与视觉顺序一致（BlogPost 默认把
          元信息排在标题之前），二是摘要需要 line-clamp 的独立控制。 -->
     <template #body>
-      <div class="flex flex-col gap-2">
-        <h3 class="line-clamp-2 text-[15px] leading-[1.5] font-semibold text-default">
+      <div class="flex flex-col gap-3 p-5">
+        <h3 class="line-clamp-2 text-base leading-[1.5] font-semibold text-default">
           <template v-for="(part, index) in titleParts" :key="index">
             <mark v-if="part.hit" class="post-mark">{{ part.text }}</mark>
             <template v-else>{{ part.text }}</template>
@@ -73,7 +77,7 @@ const CARD_UI = {
           <time>{{ post.date }}</time>
         </div>
 
-        <p v-if="post.description" class="line-clamp-2 text-[13px] leading-[1.65] text-toned">
+        <p v-if="post.description" class="line-clamp-2 text-[13.5px] leading-[1.7] text-toned">
           {{ post.description }}
         </p>
       </div>

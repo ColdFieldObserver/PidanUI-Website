@@ -25,7 +25,7 @@ const socialLinks = SOCIAL_LINKS.map((link) => {
       <UContainer class="max-w-none px-4 sm:px-6 lg:px-8">
         <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
           <!-- 品牌 + 站点导航 -->
-          <div>
+          <div class="min-w-0">
             <NuxtLink class="flex items-center gap-2.5 text-lg font-bold text-default" to="/">
               <img
                 class="size-8 rounded-lg object-contain"
@@ -53,7 +53,7 @@ const socialLinks = SOCIAL_LINKS.map((link) => {
           </div>
 
           <!-- 关注我们 -->
-          <div>
+          <div class="min-w-0">
             <h2 class="mb-3 text-[13px] font-bold tracking-[0.5px] text-dimmed uppercase">关注我们</h2>
             <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
               <a
@@ -71,8 +71,9 @@ const socialLinks = SOCIAL_LINKS.map((link) => {
             </div>
           </div>
 
-          <!-- 实时访客：容器宽度决定插件内部尺寸，窄列会挤成两行一条，故独占一列 -->
-          <div class="md:col-span-2 lg:col-span-1">
+          <!-- 访客国家/地区：插件按加载时量到的宽度写死像素宽，网格项必须 min-w-0
+               才能在窄屏收缩（否则 677px 的固定宽把整行撑出视口） -->
+          <div class="min-w-0 md:col-span-2 lg:col-span-1">
             <TrafficWidget />
           </div>
         </div>

@@ -40,13 +40,16 @@ export default defineAppConfig({
     /* ---- UPageGrid ----
        默认 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 是固定列数，卡片宽度
        会被视口牵着走。改为 auto-fill：密度由调用点的 --grid-min 决定
-       （列表 300px / 首页特性 250px / 分类索引 220px），min(…, 100%)
+       （列表 clamp(280,28vw,360) / 首页特性 250 / 分类索引 220），min(…, 100%)
        顺带兜住窄屏，不需要再写单列媒体查询。
+       列表用 clamp 而不是定值：容器宽度封顶在 1400（max-w-page），定值没法让
+       「1024 也能三列、1440 不变成四列」同时成立；clamp 在桌面段稳定落三列，
+       768 宽度下仍是两列，卡片不会被拉成通栏。
        末尾的 ! 只用于压掉主题里的 sm:/lg: 列数 —— 调用点 :ui 是追加，删不掉变体。 */
     pageGrid: {
       base:
         'relative grid gap-3.5! ' +
-        'grid-cols-[repeat(auto-fill,minmax(min(var(--grid-min,300px),100%),1fr))]!',
+        'grid-cols-[repeat(auto-fill,minmax(min(var(--grid-min,clamp(280px,28vw,360px)),100%),1fr))]!',
     },
   },
 });
