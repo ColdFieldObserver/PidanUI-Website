@@ -9,20 +9,11 @@
    ============================================================ */
 
 @theme static {
-  /* ---- 断点清单 ---- */
-  /* 只作为「有据可查的断点清单」存在：模板里禁用 sm:/md:/max-* 变体，
-     源码一律手写 @media (max-width: Npx)，因为 960px 必须与
-     useMobileDrawer 的 matchMedia('(max-width: 960px)') 完全一致。 */
-  --breakpoint-*: initial;
-  --breakpoint-2xs: 480px;
-  --breakpoint-xs: 640px;
-  --breakpoint-sm: 768px;
-  --breakpoint-md: 960px;
-  --breakpoint-lg: 1024px;
-  /* xl / 2xl 必须存在：Nuxt UI 组件的内部主题里有 xl: 规则，
-     断点被清空而未补齐时这些规则会静默消失（产物里直接没有）。 */
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+  /* ---- 断点 ---- */
+  /* 不做任何覆盖：sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536 全部
+     沿用 Tailwind v4 与 Nuxt UI 的默认值。
+     移动端临界值 = 1024（lg）—— UHeader 的 center 默认 hidden lg:flex、
+     toggle 默认 lg:hidden，正好落在这一档，不需要自定义像素断点。 */
 
   /* ---- 圆角 ---- */
   /* 清空后必须把 Nuxt UI 组件用到的 xs/sm/md/lg/xl/2xl/3xl 补齐：
@@ -42,7 +33,8 @@
   --radius-full: 999px;
 
   /* ---- 阴影 ---- */
-  --shadow-*: initial;
+  /* 不覆盖 Tailwind 默认阴影阶（shadow-sm/lg 等在 Nuxt UI 主题里被引用），
+     只额外补三个项目语义阴影。 */
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
   --shadow-float: 0 8px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-brand: 0 6px 18px rgba(255, 159, 26, 0.28);

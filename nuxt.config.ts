@@ -161,13 +161,13 @@ export default defineNuxtConfig({
 
   vite: {
     // Tailwind CSS v4：只提供 @theme 令牌与工具类，样式主体仍是原生 CSS
-    // （分层与顺序约定见 app/assets/styles/index.css 顶部注释）
+    // （分层与顺序约定见 app/assets/styles/main.css 顶部注释）
     plugins: [tailwindcss()],
     build: {
       // CSS 压缩目标锁定在 Tailwind v4 的官方支持矩阵：
       // v4 产物本身要求 Chrome 111 / Safari 16.4 / Firefox 128 起，
       // 更低内核拿不到能跑的样式，因此不再为媒体查询范围语法把 target 降到 103。
-      // 若日后调整此矩阵，必须同步 useMobileDrawer 的 matchMedia 断点（960px）。
+      // 下限同时允许 `(width > 1024px)` 这类范围语法，断点改用 Tailwind 默认阶梯。
       cssTarget: ['chrome111', 'edge111', 'firefox128', 'safari16.4', 'ios16.4'],
     },
   },
