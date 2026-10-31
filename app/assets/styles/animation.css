@@ -2,10 +2,10 @@
    全站动效
      1. 页面切换：旧页向下淡出后，新页向上淡入
         （Layout 使用 Vue Transition 的 out-in 模式顺序执行）
-     2. 内容入场：.site-main 前 8 个直接子块编排式上浮（纯 CSS，无 JS）
-     3. 滚动淡入：元素进入视口时淡入上移
-        （useScrollReveal 在客户端按需加 .reveal / .is-revealed）
+     2. 内容入场：页面容器内的区块编排式上浮（纯 CSS，无 JS）
    全部遵循系统「减少动态效果」偏好。
+   滚动淡入（原 useScrollReveal 的 .reveal）已移除：那套逻辑需要监听
+   滚动容器，而滚动现在归浏览器，收益不足以抵掉一份额外的滚动监听。
    ============================================================ */
 
 /* ---- 页面切换 ---- */
@@ -37,9 +37,9 @@
 }
 
 /* ---- 内容入场 ----
-   站点滚动容器是 .site-main（见 router.options.ts），页面根块就是它的直接
-   子元素；逐个错开 65ms 上浮，避免整页「一次性弹出」。
-   JS 不参与：禁用 JS 时动画照常播放，不影响可读性。 */
+   层级：.page-shell（UContainer）> 视图根节点 > 区块。
+   逐个错开 65ms 上浮，避免整页「一次性弹出」；JS 不参与，
+   禁用 JS 时动画照常播放，不影响可读性。 */
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -53,56 +53,43 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .site-main > :nth-child(-n + 8) {
+  .page-shell > * > :nth-child(-n + 8) {
     /* backwards 而不是 both：动画结束后不保留 transform，
-       否则 .site-main 的第一层子元素会永久成为 fixed 后代的包含块 */
+       否则区块会永久成为 fixed 后代的包含块 */
     animation: rise-in 600ms var(--ease-out-soft) backwards;
   }
 
-  .site-main > :nth-child(1) {
+  .page-shell > * > :nth-child(1) {
     animation-delay: 30ms;
   }
 
-  .site-main > :nth-child(2) {
+  .page-shell > * > :nth-child(2) {
     animation-delay: 95ms;
   }
 
-  .site-main > :nth-child(3) {
+  .page-shell > * > :nth-child(3) {
     animation-delay: 160ms;
   }
 
-  .site-main > :nth-child(4) {
+  .page-shell > * > :nth-child(4) {
     animation-delay: 225ms;
   }
 
-  .site-main > :nth-child(5) {
+  .page-shell > * > :nth-child(5) {
     animation-delay: 290ms;
   }
 
-  .site-main > :nth-child(6) {
+  .page-shell > * > :nth-child(6) {
     animation-delay: 355ms;
   }
 
-  .site-main > :nth-child(7) {
+  .page-shell > * > :nth-child(7) {
     animation-delay: 420ms;
   }
 
-  .site-main > :nth-child(8) {
+  .page-shell > * > :nth-child(8) {
     animation-delay: 485ms;
   }
-}
-
-/* ---- 滚动淡入 ---- */
-/* 未启用时元素保持默认可见，因此是纯渐进增强。 */
-.reveal {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.reveal.is-revealed {
-  opacity: 1;
-  transform: none;
 }
 
 /* ---- 减少动态效果 ---- */
@@ -110,9 +97,5 @@
   .page-enter-active,
   .page-leave-active {
     transition-duration: 0s;
-  }
-
-  .reveal {
-    transition: none;
   }
 }

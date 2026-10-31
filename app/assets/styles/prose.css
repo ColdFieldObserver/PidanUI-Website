@@ -19,17 +19,12 @@
 @layer components {
   /* ---- 文章外壳 ---- */
   .post-view {
-    max-width: var(--container-page);
+    /* 顶栏版式下没有侧栏挤压，容器宽度就是可读行宽的上限；
+       1400px 一行会到 100+ 字符，56rem（约 896px）接近中文阅读的舒适区。
+       不再给外壳铺底色 / 描边 / 圆角：文章页与列表页同底色，
+       正文直接落在页面底上，卡片只用于「一篇一篇」的列表场景。 */
+    max-width: 56rem;
     margin: 0 auto;
-    padding: 30px 34px;
-    background: color-mix(in srgb, var(--card) 55%, transparent);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-l);
-    box-shadow: var(--shadow-card);
-  }
-
-  .dark .post-view {
-    background: color-mix(in srgb, var(--card) 60%, transparent);
   }
 
   .post-header .post-title {
@@ -89,7 +84,8 @@
     font-weight: 700;
     line-height: 1.4;
     color: var(--ink);
-    scroll-margin-top: 20px;
+    /* 吸顶顶栏的高度 + 呼吸空间；与 html 的 scroll-padding-top 同源 */
+    scroll-margin-top: calc(var(--shell-header-h) + 20px);
   }
 
   /* 标题锚点：默认隐藏，hover 标题时在左侧淡入一个链条图标 */
@@ -314,10 +310,11 @@
   }
 
   /* ---- 顶部信息栏（语言标签 + 复制按钮）----
-     长代码块滚动时钉在滚动容器顶部；横向滚动的是内部 pre，信息栏不受影响 */
+     长代码块滚动时钉在视口顶部；横向滚动的是内部 pre，信息栏不受影响。
+     top 必须让开吸顶顶栏，否则会被完全遮住、复制按钮点不到。 */
   .post-content div[class*='language-'] > .code-head {
     position: sticky;
-    top: 0;
+    top: var(--shell-header-h);
     z-index: 2;
     display: flex;
     align-items: center;
@@ -622,10 +619,6 @@
   }
 
   @media (max-width: 640px) {
-    .post-view {
-      padding: 20px 18px;
-    }
-
     .post-content {
       font-size: 15px;
     }

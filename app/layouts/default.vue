@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { setupScrollReveal } from '~/composables/useScrollReveal';
-
 // ============================================================
-// 全站壳层：进度条 + 左侧栏 + 主滚动区 + 右侧栏 + 搜索弹窗
+// 全站壳层：顶栏 + 主内容 + 底栏
+//
+// 滚动模型：body 自然滚动，顶栏 UHeader 自带 sticky top-0。
+// 页面容器 .page-shell 只负责宽度与内边距，不再承担「唯一滚动容器」
+// 的角色——上一版那个 height:100vh + overflow-y:auto 的 .site-main 已移除，
+// 相应地路由滚动、锚点、返回顶部全部改回监听 window。
 //
 // 与 VitePress 时期的 Layout.vue 差异：按 frontmatter.layout 分派视图的逻辑
 // 已下沉到 app/pages/**（路由即布局），这里只保留外壳与全站钩子。
@@ -22,22 +25,12 @@ const {
   markPageLoaded,
 } = usePageProgress();
 
-// out-in 过渡下，入场开始 = 旧页面已离场；此时复位唯一滚动容器
-function resetScroller(): void {
-  if (import.meta.server) return;
-  if (window.location.hash) return;
-  document.querySelector<HTMLElement>('.site-main')?.scrollTo({ top: 0, behavior: 'auto' });
-}
-
 const offLoadingStart = nuxtApp.hook('page:loading:start', () => start(false));
 const offLoadingEnd = nuxtApp.hook('page:loading:end', () => markPageLoaded());
-const offTransitionFinish = nuxtApp.hook('page:transition:finish', resetScroller);
-// 新页面已挂载：重新扫描滚动淡入目标，并让进度条等字体 / 图片就绪后收尾
+// 新页面已挂载：让进度条等字体 / 图片就绪后收尾
 const offPageFinish = nuxtApp.hook('page:finish', () => {
-  setupScrollReveal();
   completeRendering();
   // 带 hash 的跨页导航：此时新页 DOM 已就绪，交给 usePostEnhance 精确对齐
-  // （router.options.ts 只负责「不复位」，不直接滚，避免目标节点还没渲染出来）
   const hash = route.hash;
   if (hash) {
     document.dispatchEvent(new CustomEvent('pidan:anchor', { detail: hash }));
@@ -45,32 +38,33 @@ const offPageFinish = nuxtApp.hook('page:finish', () => {
 });
 
 onMounted(() => {
-  resetScroller();
-  setupScrollReveal();
   completeRendering();
 });
 
 onBeforeUnmount(() => {
   offLoadingStart();
   offLoadingEnd();
-  offTransitionFinish();
   offPageFinish();
 });
 </script>
 
 <template>
   <PageProgress :progress="progress" :active="progressActive" :done="progressDone" />
-  <!-- 长文阅读进度条（与上面的路由加载条同位、下一层） -->
-  <ReadingProgress />
 
-  <SiteSidebar />
+  <!-- 纵向三段式：顶栏 sticky、主区撑满剩余高度、底栏留在文档流末尾 -->
+  <div class="flex min-h-dvh flex-col">
+    <SiteHeader />
 
-  <!-- 主内容地标：浏览器阅读模式据此定位正文，忽略侧栏等噪声 -->
-  <main id="content" class="site-main" role="main">
-    <slot />
-  </main>
+    <!-- 主内容地标：浏览器阅读模式据此定位正文，忽略顶栏与底栏 -->
+    <main id="content" class="flex-1" role="main">
+      <UContainer class="page-shell py-6 sm:py-8 lg:py-10">
+        <slot />
+      </UContainer>
+    </main>
 
-  <SiteRightBar />
+    <SiteFooter />
+  </div>
+
   <BackToTop />
   <SearchDialog />
 </template>
