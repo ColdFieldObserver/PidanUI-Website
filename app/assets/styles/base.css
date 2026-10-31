@@ -12,6 +12,10 @@
 :root {
   color-scheme: light;
 
+  /* 顶栏高度：UHeader 与锚点/代码块 sticky 偏移共用同一个源，
+     改 UHeader 的高度只需改 Nuxt UI 的 --ui-header-height。 */
+  --shell-header-h: var(--ui-header-height, 4rem);
+
   /* 字体栈：全站唯一来源。head 里的 Cascadia Code CDN
      只提供字形，字体族名与回退顺序在这里定义，改动前先确认 CDN 版本. */
   /* HarmonyOS Sans SC 排在最前（400/500/700 三个字重，CDN 按 unicode-range 分片，
@@ -188,20 +192,32 @@
   }
 
   html {
-    height: 100%;
     scroll-behavior: smooth;
+    /* 顶栏 sticky 常驻：锚点跳转 / 标题 scroll-margin 都按这个偏移让位，
+       否则目标会藏到顶栏下面 */
+    scroll-padding-top: calc(var(--shell-header-h) + 16px);
   }
 
   body {
-    height: 100%;
+    /* 滚动权交还浏览器：body 是自然文档流 + 视口高度下限。
+       全站唯一滚动容器不再是某个 div（历史实现见 git 记录里的 .site-main）。 */
+    min-height: 100dvh;
     font-family: var(--font-ui);
     font-size: 15px;
     line-height: 1.7;
     color: var(--ink);
     background: var(--bg);
-    overflow: hidden; /* 全局禁止 body 滚动，滚动统一交给 .site-main */
+    /* clip 而不是 hidden：hidden 会让 body 变成滚动容器，sticky header 随之失效 */
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 小屏收紧正文（原 responsive.css，断点对齐 Tailwind 的 sm 640） */
+  @media (max-width: 640px) {
+    body {
+      font-size: 14.5px;
+    }
   }
 
   a {

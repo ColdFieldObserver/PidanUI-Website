@@ -35,8 +35,5 @@
 
 @import "./tokens.css";
 @import "./base.css";
-@import "./layout.css";
-@import "./shell.css";
 @import "./prose.css";
 @import "./animation.css";
-@import "./responsive.css";
