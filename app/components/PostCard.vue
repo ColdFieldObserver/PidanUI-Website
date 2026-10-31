@@ -21,80 +21,73 @@ const coverSrc = computed(() => {
   if (/^(?:https?:|data:)/i.test(cover)) return cover;
   return withBase(cover.startsWith('/') ? cover : `/${cover}`);
 });
+
+// ============================================================
+// 卡片结构：封面通栏 + 三行信息（标题 / 分类 · 日期 / 摘要）
+//
+// 刻意不用 bg-default 做「容器色」：页面底色 #fafbfc 与卡片白 #ffffff
+// 只差约 1% 亮度，靠底色分层等于没有边界。改用描边 + hover 阴影分层，
+// 亮色下描边取 ink-300（可在 #fafbfc 上看出来），深色沿用 --line。
+// ============================================================
+const CARD_UI = {
+  root:
+    'group w-full overflow-hidden rounded-xl border border-ink-300/60 bg-transparent ' +
+    'transition-[border-color,box-shadow] duration-200 hover:border-brand-600/40 ' +
+    'hover:shadow-card dark:border-default',
+  header: 'relative w-full overflow-hidden bg-muted',
+  image: 'h-full w-full object-cover transition-transform duration-300 group-hover/blog-post:scale-[1.04]',
+  body: 'p-4',
+} as const;
 </script>
 
 <template>
-  <!-- 紧凑横排卡片：新闻 / 分类 / 标签 / 搜索页 / 搜索对话框共用。
-       封面做成「内嵌圆角块」，与卡片外框形成双层圆角，比通栏封面更精致。 -->
-  <NuxtLink
-    class="group card flex min-h-[104px] gap-3 rounded-(--radius-l) border border-default bg-default p-2 transition-[border-color,box-shadow] duration-200 hover:border-brand-600/30 hover:shadow-card"
-    :to="post.url"
-  >
-    <div class="relative w-[148px] shrink-0 overflow-hidden rounded-(--radius-m) bg-muted">
+  <UBlogPost :to="post.url" variant="naked" :ui="CARD_UI">
+    <template #header>
       <UBadge
         v-if="post.stickypost"
-        class="absolute top-1.5 left-1.5 z-1"
+        class="absolute top-2 left-2 z-1"
         color="primary"
         size="sm"
         label="置顶"
       />
-      <img
-        class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-        :src="coverSrc"
-        :alt="post.title"
-        loading="lazy"
-        decoding="async"
-      />
-    </div>
+      <img :src="coverSrc" :alt="post.title" loading="lazy" decoding="async" />
+    </template>
 
-    <div class="flex min-w-0 flex-1 flex-col justify-center gap-2 py-1 pr-1">
-      <h3 class="line-clamp-2 text-[15px] leading-[1.5] font-semibold text-default">
-        <template v-for="(part, index) in titleParts" :key="index">
-          <mark v-if="part.hit" class="post-mark">{{ part.text }}</mark>
-          <template v-else>{{ part.text }}</template>
-        </template>
-      </h3>
-      <div class="flex flex-wrap items-center gap-2 text-[12.5px] text-dimmed">
-        <time class="inline-flex items-center gap-1">
-          <UIcon name="i-lucide-calendar-days" class="size-3.5" aria-hidden="true" />
-          {{ post.date }}
-        </time>
-        <span
-          v-if="post.categories.length"
-          class="rounded-full bg-brand-soft px-2 py-0.5 text-[11.5px] font-medium text-brand-700"
-        >
-          {{ post.categories[0] }}
-        </span>
+    <!-- 三行：标题 → 分类 · 日期 → 摘要。
+         整块走 #body 插槽，一是保证 DOM 顺序与视觉顺序一致（BlogPost 默认把
+         元信息排在标题之前），二是摘要需要 line-clamp 的独立控制。 -->
+    <template #body>
+      <div class="flex flex-col gap-2">
+        <h3 class="line-clamp-2 text-[15px] leading-[1.5] font-semibold text-default">
+          <template v-for="(part, index) in titleParts" :key="index">
+            <mark v-if="part.hit" class="post-mark">{{ part.text }}</mark>
+            <template v-else>{{ part.text }}</template>
+          </template>
+        </h3>
+
+        <div class="flex flex-wrap items-center gap-1.5 text-[12.5px] text-dimmed">
+          <span v-if="post.categories.length" class="font-medium text-brand-600">
+            {{ post.categories[0] }}
+          </span>
+          <span v-if="post.categories.length" aria-hidden="true">·</span>
+          <time>{{ post.date }}</time>
+        </div>
+
+        <p v-if="post.description" class="line-clamp-2 text-[13px] leading-[1.65] text-toned">
+          {{ post.description }}
+        </p>
       </div>
-    </div>
-
-    <UIcon
-      name="i-lucide-arrow-right"
-      class="my-auto mr-1 shrink-0 text-dimmed transition-colors duration-200 group-hover:text-brand-600"
-      aria-hidden="true"
-    />
-  </NuxtLink>
+    </template>
+  </UBlogPost>
 </template>
 
 <style scoped>
-/* 项目没引 Preflight：不显式写就是 UA 的亮黄底 + 黑字，深色下非常刺眼 */
+/* 搜索命中的高亮底色：Preflight 不会重置 <mark>，不写就是 UA 的亮黄底 */
 .post-mark {
   color: inherit;
   background: color-mix(in srgb, var(--brand) 35%, transparent);
   border-radius: 3px;
   padding: 0 1px;
   box-decoration-break: clone;
-}
-
-/* 窄屏收紧缩略图（断点与 tokens.css 的 2xs=480 对齐，
-   仍手写媒体查询，避免与 960px 主断点的约定冲突） */
-@media (max-width: 480px) {
-  .card {
-    min-height: 96px;
-  }
-
-  .card > div:first-child {
-    width: 112px;
-  }
 }
 </style>
