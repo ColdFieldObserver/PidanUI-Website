@@ -311,6 +311,15 @@ html:not(.js) .news-search-noscript {
   display: block;
 }
 
+/* 访客统计依赖 JS：无 JS 时退化成去 FeedPulse 查看的链接 */
+html:not(.js) .flag-noscript {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--brand-deep);
+  text-decoration: underline;
+}
+
 /* 性格测试入口依赖 JS */
 html:not(.js) .game-entry {
   display: none;
