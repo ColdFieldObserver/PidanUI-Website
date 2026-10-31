@@ -36,7 +36,8 @@ const socialLinks = SOCIAL_LINKS.map((link) => {
                 decoding="async"
                 loading="lazy"
               />
-              <span>{{ SITE.brand }}</span>
+              <!-- 与顶栏同一套视觉补偿：纯大写品牌名的墨迹中心比行盒中心高约 1.5px -->
+              <span class="translate-y-[1.5px]">{{ SITE.brand }}</span>
             </NuxtLink>
             <p class="mt-3 max-w-xs text-sm leading-relaxed text-toned">
               为 Windows 打造《蛋仔派对》风格的桌面美化 · 非盈利粉丝二创项目

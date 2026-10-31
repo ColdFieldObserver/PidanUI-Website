@@ -44,17 +44,23 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
     to="/"
     :ui="{ container: 'max-w-none px-4 sm:px-6 lg:px-8', right: 'flex items-center gap-1' }"
   >
+    <!-- UHeader 的 #title 插槽本身是 flex items-end（图标贴底对齐），
+         直接把图片与文字塞进去会基线错位；这里包一层，让内部按垂直居中排布。
+         品牌名是纯大写形态，字形只占上行空间，行盒垂直居中时视觉上仍会偏高
+         约 1.5px（实测墨迹中心 12.33 / 行盒中心 14），因此再做一次视觉补偿。 -->
     <template #title>
-      <img
-        class="size-8 shrink-0 rounded-lg object-contain"
-        :src="withBase('/images/logo.webp')"
-        :alt="SITE.brand"
-        width="32"
-        height="32"
-        decoding="async"
-        fetchpriority="high"
-      />
-      <span>{{ SITE.brand }}</span>
+      <span class="flex items-center gap-2">
+        <img
+          class="size-8 shrink-0 rounded-lg object-contain"
+          :src="withBase('/images/logo.webp')"
+          :alt="SITE.brand"
+          width="32"
+          height="32"
+          decoding="async"
+          fetchpriority="high"
+        />
+        <span class="translate-y-[1.5px]">{{ SITE.brand }}</span>
+      </span>
     </template>
 
     <UNavigationMenu :items="menuItems" highlight />
