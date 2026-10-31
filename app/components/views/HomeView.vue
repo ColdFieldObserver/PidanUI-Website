@@ -107,13 +107,16 @@ const team = TEAM_MEMBERS.map((member) => ({
       <CardGrid :posts="latest" empty-text="暂无动态" />
 
       <template #footer>
-        <UButton
-          to="/posts/"
-          variant="soft"
-          color="primary"
-          trailing-icon="i-lucide-arrow-right"
-          label="查看全部新闻"
-        />
+        <!-- 与 Hero 的「立即下载」保持同一套按钮样式（实心品牌色 + lg + 右箭头），
+             并居中收尾这一区块 -->
+        <div class="flex justify-center">
+          <UButton
+            to="/posts/"
+            size="lg"
+            trailing-icon="i-lucide-arrow-right"
+            label="查看全部新闻"
+          />
+        </div>
       </template>
     </UPageSection>
 
