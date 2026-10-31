@@ -128,6 +128,7 @@ export default defineNuxtConfig({
         'lucide:feather',
         'lucide:folder-git-2',
         'lucide:git-branch',
+        'lucide:hard-drive',
         'lucide:git-pull-request',
         'lucide:layers',
         'lucide:messages-square',

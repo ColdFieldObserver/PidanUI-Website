@@ -318,8 +318,3 @@ html:not(.js) .news-search-noscript {
 html:not(.js) .game-entry {
   display: none;
 }
-
-/* 下载页手风琴展开依赖 JS：无 JS 时全部展开 */
-html:not(.js) .version-body {
-  grid-template-rows: 1fr;
-}
