@@ -25,9 +25,8 @@ export default defineAppConfig({
     },
 
     /* ---- UPageHeader ----
-       Nuxt UI 的默认值是按「无侧栏营销页」写的：py-8、标题带 sm:text-4xl。
-       本站内容宽 = 视口 − 520px 侧栏，标题在 768 视口就会跳到 36px。
-       这里把外框压回列表页原有的「下边框 + pb-5」节奏，标题本身不覆盖 ——
+       Nuxt UI 的默认值偏营销页（py-8 + sm:text-4xl）。列表页需要的是
+       「下边框 + pb-5」的紧凑节奏，这里只压外框，标题本身不覆盖 ——
        由 #title 插槽塞 PageTitle，字号来源保持唯一。 */
     pageHeader: {
       slots: {
@@ -39,10 +38,10 @@ export default defineAppConfig({
     },
 
     /* ---- UPageGrid ----
-       默认 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 按视口断点算列，
-       而本站 1024 视口只有 448px 内容宽，三列会把卡片压到 ~130px。
-       改为 auto-fill：密度由 --grid-min 决定（列表 300px / 分类索引 220px），
-       min(…, 100%) 顺带兜住窄屏，不需要再写单列媒体查询。
+       默认 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 是固定列数，卡片宽度
+       会被视口牵着走。改为 auto-fill：密度由调用点的 --grid-min 决定
+       （列表 300px / 首页特性 250px / 分类索引 220px），min(…, 100%)
+       顺带兜住窄屏，不需要再写单列媒体查询。
        末尾的 ! 只用于压掉主题里的 sm:/lg: 列数 —— 调用点 :ui 是追加，删不掉变体。 */
     pageGrid: {
       base:

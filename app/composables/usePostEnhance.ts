@@ -1,13 +1,11 @@
 import { nextTick } from 'vue';
 import { initTheme } from './useTheme';
-import { prefersReducedMotion, revealPassed } from './useScrollReveal';
 
 // ============================================================
 // 文章页客户端增强（均已去掉 Mermaid）
 //   1. [TOC] 目录：把正文里的 [TOC] 段落换成占位容器，再用标题 id 生成目录
-//   2. 页内锚点滚动：目录 / 脚注 / 标题锚点跳转时滚动 .site-main
+//   2. 页内锚点滚动：目录 / 脚注 / 标题锚点跳转时滚到目标位置
 //   3. 代码块复制按钮：Markdown 渲染器只输出 <button class="copy">，需自行接管
-// 滚动淡入见 useScrollReveal.ts（由 layout 统一驱动，这里只消费 revealPassed）。
 // 以上均依赖渲染后的真实 DOM，只能运行在浏览器端，且都是渐进增强：
 // 禁用 JS 时正文（含 [TOC] 字面文本）仍可正常阅读。
 // ============================================================
@@ -93,10 +91,19 @@ function fillToc(): void {
 }
 
 // ---- 页内锚点滚动 ----
-// 本站把 .site-main 作为唯一纵向滚动容器（body 设了 overflow:hidden），
-// 浏览器的锚点跳转（含 vue-router 的 scrollBehavior）滚的是 window，在本布局下无效。
-// 这里接管：把目标滚到 .site-main 顶部。
-const ANCHOR_OFFSET = 20; // 与 .post-content 内标题的 scroll-margin-top 保持一致
+// 自定义滚动容器已移除，滚动权在 window。这里仍然接管锚点，原因不是滚动
+// 目标，而是「时机」：跨页 hash 跳转时目标 DOM 可能还没渲染出来，需要有
+// 一个在 page:finish 之后执行的钩子来兜底对齐。
+// 偏移量交给 CSS 的 scroll-margin-top（见 prose.css），与 html 的
+// scroll-padding-top 同源，避免 JS / CSS 两处各写一个魔法数字。
+
+/** 尊重系统「减少动态效果」：为 true 时不使用平滑滚动 */
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
 const SETTLE_WINDOW = 2000; // 跳转后多少毫秒内，仍对迟到布局变化做重新对齐
 
 let anchorBound = false;
@@ -109,8 +116,6 @@ let settleDeadline = 0;
 /** 把 hash 指向的元素滚到滚动容器顶部（含偏移）；返回是否成功定位到目标 */
 function alignToAnchor(hash: string, smooth: boolean): boolean {
   if (typeof document === 'undefined' || !hash || hash === '#') return false;
-  const scroller = document.querySelector<HTMLElement>('.site-main');
-  if (!scroller) return false;
   let id = hash.slice(1);
   try {
     id = decodeURIComponent(id);
@@ -119,15 +124,9 @@ function alignToAnchor(hash: string, smooth: boolean): boolean {
   }
   const target = document.getElementById(id);
   if (!target) return false;
-  const top =
-    target.getBoundingClientRect().top -
-    scroller.getBoundingClientRect().top +
-    scroller.scrollTop -
-    ANCHOR_OFFSET;
   const behavior = smooth && !prefersReducedMotion() ? 'smooth' : 'auto';
-  scroller.scrollTo({ top: Math.max(0, top), behavior });
-  // 瞬时定位会直接跳过中间内容，这些块没经过视口，需要立即补齐
-  if (behavior === 'auto') revealPassed();
+  // 纵向偏移由目标元素的 scroll-margin-top 提供（顶栏高度 + 呼吸空间）
+  target.scrollIntoView({ behavior, block: 'start' });
   return true;
 }
 

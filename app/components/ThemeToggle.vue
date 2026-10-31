@@ -22,13 +22,12 @@ const icon = computed(() => ICONS[mode.value]);
 </script>
 
 <template>
-  <!-- mt-auto：父级是 flex column，把按钮顶到左栏底部 -->
+  <!-- 顶栏里是一个方形图标按钮：宽度由内容决定，不会再像侧栏时期那样撑满一行 -->
   <UButton
-    class="mt-auto w-full justify-start gap-3 px-3 py-2.5"
-    variant="outline"
+    variant="ghost"
     color="neutral"
+    square
     :icon="icon"
-    :label="label"
     :title="`当前：${label}（点击切换）`"
     :aria-label="`切换主题，当前${label}`"
     @click="cycle"
