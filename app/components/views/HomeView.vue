@@ -102,10 +102,9 @@ const team = TEAM_MEMBERS.map((member) => ({
       description="版本发布、项目公告与前瞻报道。"
       :ui="{ container: 'gap-8' }"
     >
-      <UPageGrid style="--grid-min: 280px">
-        <PostCard v-for="post in latest" :key="post.url" :post="post" />
-        <EmptyState v-if="!latest.length" col-span-full text="暂无动态" />
-      </UPageGrid>
+      <!-- 与新闻 / 下载列表共用同一套卡片网格（CardGrid → UPageGrid 的 auto-fill
+           密度规则），列数与卡片内边距才对得上 -->
+      <CardGrid :posts="latest" empty-text="暂无动态" />
 
       <template #footer>
         <UButton
