@@ -20,18 +20,11 @@
   /* ---- 文章外壳 ---- */
   .post-view {
     /* 顶栏版式下没有侧栏挤压，容器宽度就是可读行宽的上限；
-       1400px 一行会到 100+ 字符，56rem（约 896px）接近中文阅读的舒适区 */
+       1400px 一行会到 100+ 字符，56rem（约 896px）接近中文阅读的舒适区。
+       不再给外壳铺底色 / 描边 / 圆角：文章页与列表页同底色，
+       正文直接落在页面底上，卡片只用于「一篇一篇」的列表场景。 */
     max-width: 56rem;
     margin: 0 auto;
-    padding: 30px 34px;
-    background: color-mix(in srgb, var(--card) 55%, transparent);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-l);
-    box-shadow: var(--shadow-card);
-  }
-
-  .dark .post-view {
-    background: color-mix(in srgb, var(--card) 60%, transparent);
   }
 
   .post-header .post-title {
@@ -626,10 +619,6 @@
   }
 
   @media (max-width: 640px) {
-    .post-view {
-      padding: 20px 18px;
-    }
-
     .post-content {
       font-size: 15px;
     }
