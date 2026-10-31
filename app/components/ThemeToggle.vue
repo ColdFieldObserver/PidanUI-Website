@@ -57,18 +57,21 @@ const stop = computed(() => STOPS[shownMode.value]);
 
 <style scoped>
 /* 几何一次算清，避免「差 1px」的错位：
-   滑块直径 = 高 - (描边 + 内边距) × 2 —— 这样滑块与胶囊内缘之间的留白
-   恰好等于 padding，滑块圆与胶囊圆头同心，圆角衔接才不显突兀；
-   滑块行程 = 宽 - (描边 + 内边距) × 2 - 滑块直径。
+   描边用 inset box-shadow 画在盒子内部，而不是 border —— 浏览器会按设备像素
+   把 border 取整（1px 可能落成 0.8/1.2），上下左右不对称，胶囊圆头和滑块
+   就会出现肉眼可见的偏心；inset 阴影不参与布局，四边内缩严格相等。
+   滑块直径 = 高 - 内边距 × 2，行程 = 宽 - 内边距 × 2 - 滑块直径：
+   这样滑块与描边之间的留白处处等于 3px，两者同心。
    三档位置用 data-stop 表达（0/1/2），不用内联 style —— 内联自定义属性在
    hydration 时容易被判定成样式不一致 */
 .theme-switch {
   --switch-w: 78px;
   --switch-h: 34px;
-  --switch-border: 1px;
-  --switch-pad: 3px;
-  --knob: calc(var(--switch-h) - (var(--switch-border) + var(--switch-pad)) * 2);
-  --travel: calc(var(--switch-w) - (var(--switch-border) + var(--switch-pad)) * 2 - var(--knob));
+  /* 内边距比描边多 1px，保证滑块与描边之间留出 3px */
+  --switch-pad: 4px;
+  --switch-ring: 1px;
+  --knob: calc(var(--switch-h) - var(--switch-pad) * 2);
+  --travel: calc(var(--switch-w) - var(--switch-pad) * 2 - var(--knob));
   --mark: 15px;
 
   position: relative;
@@ -77,18 +80,17 @@ const stop = computed(() => STOPS[shownMode.value]);
   align-items: center;
   width: var(--switch-w);
   height: var(--switch-h);
-  padding: var(--switch-pad);
+  padding: 0;
   background: var(--card);
-  border: var(--switch-border) solid var(--line);
+  border: 0;
   border-radius: 999px;
+  box-shadow: inset 0 0 0 var(--switch-ring) var(--line);
   cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .theme-switch:hover {
-  border-color: var(--brand-deep);
+  box-shadow: inset 0 0 0 var(--switch-ring) var(--brand-deep);
 }
 
 .theme-switch:focus-visible {
@@ -122,18 +124,17 @@ const stop = computed(() => STOPS[shownMode.value]);
   left: calc(var(--switch-pad) + var(--knob) / 2 + var(--travel));
 }
 
-/* 纵向用 inset + auto 外边距居中，而不是 top:50% + translateY(-50%)：
-   后者在半像素高度下会出现 0.5px 偏移，圆头与滑块的高低差就是这么来的 */
+/* 纵向用 inset 定位而非 top:50% + translateY(-50%)：滑块高度等于内高，
+   inset-start 直接取 padding 即可与胶囊内缘等距，不会出现半像素偏移；
+   横向同样从 padding 起算，三档用 translateX 推进 */
 .theme-switch__knob {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--switch-pad);
+  inset-block-start: var(--switch-pad);
+  inset-inline-start: var(--switch-pad);
   display: grid;
   place-items: center;
   width: var(--knob);
   height: var(--knob);
-  margin-block: auto;
   color: #1d2129;
   background: var(--brand-deep);
   border-radius: 50%;
