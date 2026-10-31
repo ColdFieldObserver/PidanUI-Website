@@ -124,6 +124,15 @@ export default defineNuxtConfig({
       // 新增动态图标时同步这里。
       icons: [
         'lucide:activity',
+        'lucide:arrow-up-right',
+        'lucide:feather',
+        'lucide:folder-git-2',
+        'lucide:git-branch',
+        'lucide:git-pull-request',
+        'lucide:layers',
+        'lucide:messages-square',
+        'lucide:shield-check',
+        'lucide:x',
         'lucide:arrow-left',
         'lucide:arrow-right',
         'lucide:arrow-up',
@@ -145,7 +154,6 @@ export default defineNuxtConfig({
         'lucide:monitor',
         'lucide:moon',
         'lucide:newspaper',
-        'lucide:panel-right',
         'lucide:rotate-ccw',
         'lucide:rss',
         'lucide:search',

@@ -29,7 +29,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
   {
     name: 'GitCode',
     url: 'https://gitcode.com/PidanUI-Team',
-    icon: 'i-bi-git',
+    icon: 'i-lucide-git-branch',
   },
   {
     name: '哔哩哔哩',
@@ -49,6 +49,6 @@ export const SOCIAL_LINKS: SocialLink[] = [
   {
     name: '本官网源代码仓库',
     url: 'https://github.com/PidanEggyTeam/PidanUI-Website',
-    icon: 'i-octicon-repo-16',
+    icon: 'i-lucide-folder-git-2',
   },
 ];
