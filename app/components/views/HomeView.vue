@@ -29,9 +29,9 @@ const team = TEAM_MEMBERS.map((member) => ({
       </template>
 
       <template #title>
-        <h1 class="hero-title text-[clamp(34px,5.4vw,54px)] leading-[1.15] font-extrabold tracking-[1px]">
+        <span class="hero-title text-[clamp(34px,5.4vw,54px)] leading-[1.15] font-extrabold tracking-[1px]">
           Pidan<em>UI</em>
-        </h1>
+        </span>
       </template>
 
       <template #description>
