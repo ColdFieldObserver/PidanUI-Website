@@ -213,6 +213,15 @@ const COPYRIGHT = [
   color: var(--ink-2);
 }
 
+/* 引入 Preflight 后 ul/ol 默认 list-style:none，这里显式恢复符号 */
+.card ul {
+  list-style: disc;
+}
+
+.card ol {
+  list-style: decimal;
+}
+
 .card li {
   margin: 0.25em 0;
 }

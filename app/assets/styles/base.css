@@ -139,21 +139,24 @@
 }
 
 /* ============================================================
-   全局重置
+   全局基线
    ------------------------------------------------------------
-   全部放进 @layer base：未分层规则会压过所有 utilities —— 那样
-   `* { margin:0; padding:0 }` 会让 Nuxt UI 组件与工具类里的
-   py-* / mt-* / px-* 全部失效（按钮会缩成 20px 高、mt-auto 推不到底）。
-   主题变量仍在上面未分层的 :root 里，需要压过 Nuxt UI 的 --ui-* 默认值。
+   元素级默认值（margin / padding / box-sizing / border / 表单控件
+   / 列表符号 / 标题字号）已由 main.css 引入的 Tailwind Preflight
+   在同一个 @layer base 里提供，这里不再重复声明——重复写会和
+   Preflight 抢同一批属性，改一处忘一处。
+
+   本文件只保留 Preflight 不管的四类东西：
+   1. 项目主题变量（未分层，见上方 :root）；
+   2. 滚动条外观与点击高亮；
+   3. 过渡曲线基线（Preflight 不涉及 transition）；
+   4. 少数需要「压过 Preflight」的项目决定（如 svg 的 inline-block、
+      标题字重）。
+   全部放进 @layer base：未分层规则会压过所有 utilities。
    ============================================================ */
 @layer base {
   * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    /* 通用细滚动条：中性灰，不与品牌色抢注意力。
-       主滚动容器 .site-main 在 layout.css 里另有品牌黄版本（未分层 +
-       更高特异性），因此这里不会覆盖它。 */
+    /* 通用细滚动条：中性灰，不与品牌色抢注意力。 */
     scrollbar-width: thin;
     scrollbar-color: rgba(128, 128, 128, 0.42) transparent;
     /* 点击态去除高亮 */
@@ -206,11 +209,6 @@
     text-decoration: none;
   }
 
-  img {
-    max-width: 100%;
-    display: block;
-  }
-
   /* ---- 交互基线：统一过渡曲线，只过渡合成 / 绘制属性，不触发布局 ----
      与 components 里各组件自己的 transition-* 工具类不冲突：
      本条在 base 层，任何 utilities 都能覆盖它。 */
@@ -246,28 +244,18 @@
     flex-shrink: 0;
   }
 
-  /* 浏览器默认控件样式归零（Preflight 的等价子集）：
-     不引 Preflight 时 <button> 会带 `border: 2px outset` 与 ButtonFace 底，
-     Nuxt UI 的描边按钮会因此多出一圈深色方框。 */
-  button,
-  [type='button'],
-  [type='reset'],
-  [type='submit'] {
-    appearance: none;
-    color: inherit;
-    background-color: transparent;
-    background-image: none;
-    border: 0 solid;
-    font-family: inherit;
-  }
-
-  input,
-  textarea,
-  select {
-    color: inherit;
-    background-color: transparent;
-    border: 0 solid;
-    font-family: inherit;
+  /* 标题字重补齐：Preflight 把 h1-h6 设成 `font-weight: inherit`，
+     只写颜色不写字重的标题（如 404 页的 h1）会掉成常规体。
+     字号仍由各页面 / prose.css 显式决定，这里只管一个字重。
+     注意不能用 :where() 包：那会把特异性降到 0，输给同层里更早的
+     Preflight 规则。 */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
   }
 
   button:not(:disabled),
