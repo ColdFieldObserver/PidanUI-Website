@@ -30,4 +30,5 @@ export const TEAM_MEMBERS: TeamMember[] = [
   },
   { name: '嘎达皮蛋', role: '维护、制作、测试镜像', avatar: 'https://img.remit.ee/i/dTigJwxB3nNL' },
   { name: '昶', role: '有多年编程经验', avatar: 'https://img.remit.ee/i/r4nWy3kZl6qn' },
+  { name: '冒泡の狼小蓝', role: '测试镜像', avatar: 'https://img.remit.ee/i/ha3lcBWBpym0' },
 ];

@@ -1,6 +1,6 @@
 <div align="center">
 
-![PidanUI 官网截图](https://img.remit.ee/i/q0xhELPvJ585)
+![PidanUI 官网截图](https://img.remit.ee/i/S1f2K1w4rU7o)
 
 # PidanUI-Website
 
