@@ -20,10 +20,9 @@
   /* ---- 文章外壳 ---- */
   .post-view {
     /* 顶栏版式下没有侧栏挤压，容器宽度就是可读行宽的上限；
-       1400px 一行会到 100+ 字符，56rem（约 896px）接近中文阅读的舒适区。
-       不再给外壳铺底色 / 描边 / 圆角：文章页与列表页同底色，
-       正文直接落在页面底上，卡片只用于「一篇一篇」的列表场景。 */
-    max-width: 56rem;
+       64rem（约 1024px）比旧值 56rem 略宽，长代码 / 宽表格不至于贴边，
+       且与冷域观者站对齐。 */
+    max-width: 64rem;
     margin: 0 auto;
   }
 
@@ -423,12 +422,19 @@
   }
 
   /* ---- 表格 ---- */
-  .post-content table {
-    display: block;
-    width: 100%;
-    max-width: 100%;
+  /* 不再 display:block：block 会破坏表格的行/列语义，Edge 阅读模式提取后
+     单元格被块化、关系丢失，整张表看起来「空了」。横向溢出交给外层
+     .table-scroll（ProseTable 组件渲染），正常站点仍可滚动，
+     阅读模式里这层 div 没有样式、不影响表格语义。 */
+  .post-content .table-scroll {
     margin: 1.2em 0;
     overflow-x: auto;
+    border-radius: var(--radius-m);
+  }
+
+  .post-content table {
+    display: table;
+    width: 100%;
     border-collapse: collapse;
     font-size: 14.5px;
   }
