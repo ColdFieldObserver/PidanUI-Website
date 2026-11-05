@@ -6,7 +6,7 @@
 
 ![Last Commit](https://img.shields.io/github/last-commit/PidanEggyTeam/PidanUI-Website?label=Last%20Commit)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4.6.4-00DC82?logo=Nuxt&logoColor=white)](https://nuxt.com/)
-[![Vue](https://img.shields.io/badge/Vue-3.5.44-4FC08D?logo=Vue.js&logoColor=white)](https://cn.vuejs.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5.45-4FC08D?logo=Vue.js&logoColor=white)](https://cn.vuejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-3178C6?logo=TypeScript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.3.3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-orange)
