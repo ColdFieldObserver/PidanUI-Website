@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { COMMUNITY_GROUPS, HOME_FEATURES, PROMO_IMAGE } from '~/data/home';
 import { TEAM_MEMBERS } from '~/data/team';
 import { latestPosts, useAllPosts } from '~/composables/usePosts';
@@ -25,14 +25,33 @@ const SECTION_UI = {
 } as const;
 
 // ============================================================
-// 开发人员：成员够多时用 Nuxt UI 的 UMarquee 做从右到左的循环滚动
+// 开发人员：成员够多且在「非窄屏」时用 Nuxt UI 的 UMarquee 做从右到左的循环滚动
 // ------------------------------------------------------------
-// 少于 6 人时保持静止的横向列表（可手动滑）：那几张卡片本来就放得下，
-// 跑马灯只会让人读不完名字。滚动方向、悬停暂停、减少动效时停止，
-// 全部交给 UMarquee（它用的是 motion-safe 的 CSS 关键帧）。
+// - 少于 6 人：卡片本来就放得下，跑马灯只会让人读不完名字 → 静止列表；
+// - 屏幕宽度 < 768px：窄屏下跑马灯横向滚动既看不清也难操作 → 静态网格列表；
+//   滚动方向、悬停暂停、减少动效时停止，全部交给 UMarquee（它用的是 motion-safe 的 CSS 关键帧）。
 // ============================================================
 const MARQUEE_MIN = 6;
 const marqueeActive = computed(() => team.length >= MARQUEE_MIN);
+
+// 窄屏判定（<768px）。SSR 阶段无 window，默认 false，与客户端首屏渲染一致，避免 hydration 不匹配；
+// 挂载后再用 matchMedia 读取真实视口宽度，并监听 resize / 旋转等变化。
+const isNarrow = ref(false);
+let teamMql: MediaQueryList | null = null;
+let teamMqlHandler: ((e: MediaQueryListEvent) => void) | null = null;
+onMounted(() => {
+  if (!window.matchMedia) return;
+  teamMql = window.matchMedia('(max-width: 767px)');
+  isNarrow.value = teamMql.matches;
+  teamMqlHandler = (e: MediaQueryListEvent) => (isNarrow.value = e.matches);
+  teamMql.addEventListener('change', teamMqlHandler);
+});
+onBeforeUnmount(() => {
+  teamMql?.removeEventListener('change', teamMqlHandler!);
+});
+
+// 仅在「人数够多 且 非窄屏」时启用跑马灯；窄屏一律退化为静态列表。
+const showMarquee = computed(() => marqueeActive.value && !isNarrow.value);
 </script>
 
 <template>
@@ -137,32 +156,26 @@ const marqueeActive = computed(() => team.length >= MARQUEE_MIN);
       </template>
     </UPageSection>
 
-    <!-- 开发人员：成员卡片横向排列，头像放在卡片顶部 -->
+    <!-- 开发人员：成员卡片，窄屏下为两列静态网格列表 -->
     <UPageSection
       title="开发人员"
       description="PidanUI 的团队成员大多来自原 EggyUI 团队，所以——PidanUI 还会是你熟悉的样子。"
       :ui="SECTION_UI"
     >
-      <!-- 人数够多 → UMarquee 循环滚动（pause-on-hover 悬停暂停） -->
-      <UMarquee
-        v-if="marqueeActive"
-        :repeat="2"
-        pause-on-hover
-        :overlay="false"
-        class="team-marquee"
-      >
+      <!-- 人数够多且非窄屏 → UMarquee 循环滚动（pause-on-hover 悬停暂停） -->
+      <UMarquee v-if="showMarquee" :repeat="2" pause-on-hover :overlay="false" class="team-marquee">
         <TeamMemberCard v-for="member in team" :key="member.name" :member="member" />
       </UMarquee>
 
-      <!-- 人数不足 → 静止的横向列表；可聚焦，键盘用户才能滚动它 -->
-      <div
-        v-else
-        class="team-scroller"
-        role="region"
-        tabindex="0"
-        aria-label="开发人员列表，可横向滚动"
-      >
-        <TeamMemberCard v-for="member in team" :key="member.name" :member="member" />
+      <!-- 否则 → 静态列表：窄屏为两列静态网格（不滚动、不跑马灯），
+           桌面端（人数不足阈值时）为可横向滑动的列表 -->
+      <div v-else class="team-static" role="region" tabindex="0" aria-label="开发人员列表">
+        <TeamMemberCard
+          v-for="member in team"
+          :key="member.name"
+          :member="member"
+          class="team-card"
+        />
       </div>
     </UPageSection>
 
@@ -217,26 +230,6 @@ const marqueeActive = computed(() => team.length >= MARQUEE_MIN);
   font-style: normal;
 }
 
-/* 开发人员横向列表（成员不足 UMarquee 阈值时的静止形态）：
-   - overflow-x: auto 保留键盘 / 触控板 / 触摸的滚动能力
-   - scroll-snap 让每次滑动停在卡片边界 */
-.team-scroller {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 2px;
-  padding: 2px 2px 12px;
-}
-
-/* 键盘聚焦时给一条可见的焦点环（容器本身没有可见边框） */
-.team-scroller:focus-visible {
-  outline: 2px solid var(--color-brand-deep-a35);
-  outline-offset: 4px;
-  border-radius: var(--radius-m);
-}
-
 /* UMarquee 默认 gap 是 spacing(16) = 64px、一圈 20s；
    这里与卡片间距对齐为 16px，并放慢到 48s（12 张卡≈2.8k px，太快看不清名字） */
 .team-marquee {
@@ -244,8 +237,38 @@ const marqueeActive = computed(() => team.length >= MARQUEE_MIN);
   --duration: 48s;
 }
 
-/* 键盘聚焦时给一条可见的焦点环（容器本身不可见边框） */
-.team-scroller:focus-visible {
+/* 静态列表（非跑马灯形态）：
+   - 窄屏（<768px）：两列静态网格，不参与滚动、不做跑马灯动画，直接平铺展示；
+   - 桌面端（人数不足阈值时）：恢复为可横向滑动、scroll-snap 的静止列表。
+   卡片自身是固定宽度 w-[220px]，窄屏网格里用 :deep 撑满列宽。 */
+.team-static {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.team-static :deep(.team-card) {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .team-static {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    padding: 2px 2px 12px;
+  }
+
+  .team-static :deep(.team-card) {
+    width: 220px;
+  }
+}
+
+/* 键盘聚焦时给一条可见的焦点环（桌面端可横向滚动时需要） */
+.team-static:focus-visible {
   outline: 2px solid var(--color-brand-deep-a35);
   outline-offset: 4px;
   border-radius: var(--radius-m);
