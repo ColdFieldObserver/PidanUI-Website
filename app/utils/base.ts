@@ -2,7 +2,7 @@
  * 站内链接 / 资源路径拼接（VitePress 的 withBase 等价物）。
  *
  * 保留它而不是全部改成写死路径：站点目前 base 为 '/'，但将来若改成
- * 子路径部署（GitHub Pages 项目页），只需改 nuxt.config 的 app.baseURL。
+ * 子路径部署（例如挂到自定义域的子目录），只需改 nuxt.config 的 app.baseURL。
  */
 export function withBase(input: string): string {
   if (!input) return input;

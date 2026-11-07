@@ -2,11 +2,13 @@
 // 静态产物预览服务器
 //
 // 为什么不用 `python -m http.server`：它是「文件服务器」，不会把
-// `/about` 回退到 `about.html`（GitHub Pages 会）。Nuxt 的产物是
+// `/about` 回退到 `about.html`（Cloudflare 的静态资源会）。Nuxt 的产物是
 // `about.html` 而不是 `about/index.html`，用 Python 起服务时站内跳转
 // 会拿到 404，看起来像页面卡死，属于测试环境问题。
 //
 // 用法：pnpm preview:static   （默认 http://localhost:4173）
+// 更贴近线上行为的是 `pnpm preview`（wrangler dev），它会按 Cloudflare
+// 的 html_handling / 404 规则跑同一份产物。
 // ============================================================
 import http from 'node:http';
 import fs from 'node:fs';

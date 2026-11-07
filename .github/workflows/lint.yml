@@ -1,18 +1,18 @@
 name: Lint & Format
 
-# 代码风格守门：ESLint（可能出错的地方）+ Prettier（排版）
+# 代码风格守门：ESLint（可能出错的地方）+ Prettier（排版）+ 构建校验
 #
 # 三个触发来源：
-#   pull_request —— 所有 PR（含 fork 发起的）都跑一次
-#   push         —— 分支推送也跑，但只要不是 main；main 由 deploy.yml 以
-#                   workflow_call 调用，避免同一次推送跑两遍
-#   workflow_call —— 供 deploy.yml 复用，部署前先过这一关
+#   pull_request      —— 所有 PR（含 fork 发起的）都跑一次
+#   push              —— 所有分支推送（含 main）都跑，部署前先过这一关
+#   workflow_dispatch —— 需要手动重跑时
+#
+# 部署已改为 Cloudflare Workers（维护者本地执行 `pnpm deploy`），仓库里不再有
+# GitHub Pages 部署流水线；构建校验因此挂在这里，保证「检查不过就不该发版」。
 on:
   push:
-    # 注意：main 的检查交给 deploy.yml 里 needs 的关系，这里不要重复声明
-    branches-ignore: ['main']
   pull_request:
-  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -44,3 +44,7 @@ jobs:
 
       - name: ESLint
         run: pnpm run lint
+
+      # 构建同时验证预渲染：failOnError 下任何缺页都会让这一步失败
+      - name: Build
+        run: pnpm run build

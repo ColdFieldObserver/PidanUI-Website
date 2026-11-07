@@ -10,6 +10,8 @@ allowBuilds:
   better-sqlite3: true
   # @nuxt/ui 的传递依赖（vue-demi）需要 postinstall 写 Vue 版本适配入口
   vue-demi: true
+  # wrangler 的运行时（workerd）需要下载对应平台的二进制
+  workerd: true
 
 minimumReleaseAgeExclude:
   - '@vue/compiler-core@3.5.45'

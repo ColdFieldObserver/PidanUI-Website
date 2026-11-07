@@ -4,7 +4,8 @@ import { rehypeExternalLinksBlank } from './build/rehype-external-links';
 
 // ============================================================
 // PidanUI 官网 · Nuxt 站点配置
-//   - 纯静态站点：`nuxt generate` 产出 .output/public，部署 GitHub Pages
+//   - 纯静态站点：`nuxi generate` 产出 .output/public，
+//     以 assets-only Worker 的形式部署到 Cloudflare Workers
 //   - 内容由 @nuxt/content v3 驱动（content/posts/*.md）
 //   - 样式为原生 CSS + Tailwind v4（@theme 令牌），沿用 [data-theme] 三态机制
 // ============================================================
@@ -50,9 +51,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/images/favicon.ico' },
-        // 全站字体（CDN）：HarmonyOS Sans SC（正文）/ Cascadia Code（代码）
         // 图标已全部改为 Nuxt UI 的 Iconify（构建期内联 SVG），不再引 Font Awesome
-        { rel: 'preconnect', href: 'https://cdn.jsdelivr.net', crossorigin: '' },
         // 实时访客 FeedPulse：右栏组件常驻每一页，hydration 完成即回报
         // track-pixel，组件脚本与 SSE 轮询同源；预连接可省掉每页首次访问
         // 该源的 DNS + TCP + TLS 握手。
@@ -60,24 +59,11 @@ export default defineNuxtConfig({
         // 带 crossorigin 会另开一条 CORS 连接池，反而复用不上。
         { rel: 'preconnect', href: 'https://feed-pulse.com' },
         { rel: 'dns-prefetch', href: 'https://feed-pulse.com' },
-        {
-          rel: 'stylesheet',
-          href: 'https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code@5.2.3/index.min.css',
-        },
-        // 界面字体（CDN）：HarmonyOS Sans SC（400 / 500 / 700 三个字重，unicode-range 分片），
-        // 与上方约定一致：仓库不保留字体文件
-        {
-          rel: 'stylesheet',
-          href: 'https://cdn.jsdelivr.net/npm/harmonyos-sans-sc-webfont-splitted@1.1.0/dist/Regular.css',
-        },
-        {
-          rel: 'stylesheet',
-          href: 'https://cdn.jsdelivr.net/npm/harmonyos-sans-sc-webfont-splitted@1.1.0/dist/Medium.css',
-        },
-        {
-          rel: 'stylesheet',
-          href: 'https://cdn.jsdelivr.net/npm/harmonyos-sans-sc-webfont-splitted@1.1.0/dist/Bold.css',
-        },
+        // 界面字体（自包含）：HarmonyOS Sans SC 的 400 / 500 / 700 三档分片由
+        // scripts/sync-fonts.mjs 在 `nuxi generate` 之后写进 .output/public/fonts/，
+        // 这里只引用产出的样式表；仓库不保留字体文件，也不再走任何 CDN。
+        // Cascadia Code 走 @fontsource，由 Vite 打包（见 main.css）。
+        { rel: 'stylesheet', href: '/fonts/harmonyos.css' },
         // Atom feed 自动发现：浏览器 / RSS 阅读器可通过这个 link 自动订阅
         {
           rel: 'alternate',
@@ -187,6 +173,9 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    // 显式锁死 static：Cloudflare 上的环境变量会把预设切到 cloudflare-*，
+    // 那套产物带 Worker 入口，wrangler deploy 会找不到 assets 目录。
+    preset: 'static',
     prerender: {
       crawlLinks: false, // 路由由 buildRoutes() 全量枚举，不依赖爬虫
       failOnError: true, // 缺页必须让 CI 失败

@@ -16,10 +16,11 @@
      改 UHeader 的高度只需改 Nuxt UI 的 --ui-header-height。 */
   --shell-header-h: var(--ui-header-height, 4rem);
 
-  /* 字体栈：全站唯一来源。head 里的 Cascadia Code CDN
-     只提供字形，字体族名与回退顺序在这里定义，改动前先确认 CDN 版本. */
-  /* HarmonyOS Sans SC 排在最前（400/500/700 三个字重，CDN 按 unicode-range 分片，
-     见 nuxt.config.ts 的 app.head）；未命中字形时依次回退 苹方 → 雅黑 */
+  /* 字体栈：全站唯一来源。字形文件全部自包含（HarmonyOS Sans SC 由
+     scripts/sync-fonts.mjs 灌注，Cascadia Code 由 @fontsource 打包），
+     字体族名与回退顺序在这里定义。 */
+  /* HarmonyOS Sans SC 排在最前（400/500/700 三个字重，构建后按 unicode-range
+     分片，见 nuxt.config.ts 的 app.head 与脚本）；未命中字形时依次回退 苹方 → 雅黑 */
   --font-ui:
     'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI',
     Roboto, sans-serif;
