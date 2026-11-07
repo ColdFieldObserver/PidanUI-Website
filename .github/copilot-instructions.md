@@ -14,13 +14,13 @@
 
 ### 禁止注入式增强（硬性规则）
 
-- **禁止在 `public/` 下放 JS / CSS，再通过 `app.head` 的 `link` / `script` 注入它们来做功能增强。** 需要新交互就写 Vue 组件（`app/components/*.vue`）、composable（`app/composables/`）或客户端插件（`app/plugins/*.client.ts`）；需要新样式就写进 `app/assets/styles/` 或组件的 `<style scoped>`。`nuxt.config.ts` 的 `app.head` 只用于**站点元信息**与**第三方 CDN 资源**（字体、首帧主题脚本这类），不放本站自己写的逻辑。
+- **禁止在 `public/` 下放 JS / CSS，再通过 `app.head` 的 `link` / `script` 注入它们来做功能增强。** 需要新交互就写 Vue 组件（`app/components/*.vue`）、composable（`app/composables/`）或客户端插件（`app/plugins/*.client.ts`）；需要新样式就写进 `app/assets/styles/` 或组件的 `<style scoped>`。`nuxt.config.ts` 的 `app.head` 只用于**站点元信息**（含首帧主题脚本）与**第三方资源的预连接**，不放本站自己写的业务逻辑；字体也不在这里从 CDN 引（见「字体与图标」）。
 - 为什么（历史教训：`a3045cc` 引入 `public/custom/{custom.css,custom.js}`，`b5b79b1` 全部拆回主站代码）：
   - **SPA 不接管**：注入的脚本只在首次加载扫一遍 DOM，站内跳转后新增的页面不会被处理（滚动显现、进度条、返回顶部全部失效），而本站是 Nuxt 客户端路由。
   - **绕开样式分层**：`public/` 里的 CSS 拿不到 Tailwind 的 `@layer`，只能靠 `!important` 和特异性堆叠去压既有规则，改一处坏一片；`base.css` 的 `@layer base` 约束对它完全无效。
   - **不受类型与 lint 覆盖**：`public/` 是原样拷贝，`eslint.config.mjs` 与 `pnpm build` 都不会检查，等于在受管代码之外开了一个无人守的口子。
   - **重复实现**：站内已有 `useScrollReveal` / `PageProgress` 等能力，注入层再写一份必然与它们冲突（当时两套滚动显现就完全重叠）。
-- `public/` 只放**原样发给浏览器、不需要加工的资源**：图片、`giscus/` 下的评论皮肤、`.nojekyll` 之类。例外是 `giscus/*.css`——那是 giscus iframe 跨源拉取的第三方皮肤，必须公网可访问的独立 URL，不属于本站样式。
+- `public/` 只放**原样发给浏览器、不需要加工的资源**：图片、`giscus/` 下的评论皮肤、`BingSiteAuth.xml` 之类。例外是 `giscus/*.css`——那是 giscus iframe 跨源拉取的第三方皮肤，必须公网可访问的独立 URL，不属于本站样式。字体不在 `public/` 里（见「字体与图标」，由构建脚本灌注）。
 
 ### 一致性
 
@@ -34,19 +34,21 @@
 
 | 项       | 值                                                                                                                                                                |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 定位     | PidanUI 项目官网，纯静态站点（SSG），部署于 GitHub Pages                                                                                                          |
+| 定位     | PidanUI 项目官网，纯静态站点（SSG），以 assets-only Worker 部署于 Cloudflare Workers                                                                              |
 | 线上地址 | https://pidanui.eggycore.top（`app.baseURL = '/'`，URL 不带 `.html` 与尾斜杠）                                                                                    |
 | 技术栈   | Nuxt `4.6.2`（Vite 8 + Nitro 预渲染）+ Vue 3 + TypeScript（别名装 TS 6 API，见「代码风格与 CI」）+ Tailwind CSS `4.3.3` + Nuxt UI `4.12` + @nuxt/content `3.16.2` |
 | 包管理器 | pnpm（`packageManager: pnpm@12.11.2`），CI 用 `pnpm install --frozen-lockfile`                                                                                    |
-| 发布流程 | 推送到 `main` → `.github/workflows/lint.yml` 先过风格检查 → `deploy.yml` 构建并部署 `.output/public`                                                              |
+| 发布流程 | 分支 / PR 触发 `.github/workflows/lint.yml`（`format:check` → `lint` → `build`）；部署由维护者执行 `pnpm deploy`（`wrangler deploy`），仓库里没有 Pages 流水线    |
 | 许可证   | AGPL v3，禁止商业用途                                                                                                                                             |
 
 ## 常用命令
 
 ```bash
 pnpm dev                       # 本地开发（默认 http://localhost:3000）
-pnpm build                     # 生产构建 = nuxt generate，产物在 .output/public
-pnpm preview                   # 预览（静态模式下需另配静态服务器，见下）
+pnpm build                     # 生产构建 = nuxi generate + 字体灌注，产物在 .output/public
+pnpm preview                   # wrangler dev：按 Cloudflare 的规则跑同一份产物
+pnpm preview:static            # 纯静态服务器（不带 Cloudflare 行为，备用）
+pnpm deploy                    # pnpm build + wrangler deploy
 pnpm exec nuxt prepare         # 生成 .nuxt 类型与别名（改 nuxt.config 后手动跑一次）
 pnpm lint                      # ESLint：找「可能出错的地方」
 pnpm lint:fix                  # ESLint 自动修复（漏分号等）
@@ -55,8 +57,9 @@ pnpm format:check              # 只检查不写入（CI 用这个）
 ```
 
 - **构建必须零错误零警告**。`nitro.prerender.failOnError: true`，任何路由 404 都会让构建失败。
-- `nuxt generate` 只产出 `.output/public`（没有 `.output/server`），因此 `pnpm preview` 不可用；本地验收静态站点请用任意支持「无扩展名 → `.html` 回退」的静态服务器。
-- 项目没有单元测试，验收方式：`pnpm build` 通过 + 浏览器实看页面。
+- `nuxi generate` 只产出 `.output/public`（没有 `.output/server`）。`nitro.preset` 已显式锁死为 `static`：Cloudflare 的环境变量会把预设切到 `cloudflare-*`，那套产物带 Worker 入口，`wrangler deploy` 会找不到 assets 目录。
+- `pnpm build` 里 `node scripts/sync-fonts.mjs` 不能省：它把 HarmonyOS Sans SC 的三档分片写进 `.output/public/fonts/` 并生成 `harmonyos.css`；脚本还会清掉 Nitro 可能留下的 `server/` 与 `.wrangler/`。
+- 项目没有单元测试，验收方式：`pnpm build` 通过 + `pnpm preview` 下浏览器实看页面。
 - 若构建报 `Another Nuxt build is already running`，说明有残留的 node 进程占着锁：先结束该 PID（`taskkill /PID <pid> /F`），再删 `node_modules/.cache/nuxt/*.lock`。
 
 ## 代码风格与 CI
@@ -65,7 +68,7 @@ pnpm format:check              # 只检查不写入（CI 用这个）
 - 分工固定：**Prettier 管排版（缩进、引号、换行、分号），ESLint 只管可能出错的地方**（未定义变量、无效 Vue 用法、可疑 TS 写法）。职责重叠的规则由 `eslint-config-prettier` 关掉，所以不要把格式化规则加回 ESLint，否则两个工具会互相改来改去。
 - 配置文件：`.prettierrc.json`（`singleQuote`、`printWidth: 100`、`endOfLine: auto`）+ `.prettierignore` + `eslint.config.mjs`（flat config）。`content/` 与 `public/` 不进 Prettier：MDC 组件、KaTeX 公式和中文长句经不起换行重排。
 - `endOfLine: auto` 是刻意的：仓库里存的是 LF（CI 检出 LF），Windows 工作区是 CRLF，写死 `lf` 会让本机 `format:check` 全红。
-- **CI 顺序：`.github/workflows/lint.yml`（ESLint + Prettier）先跑，`deploy.yml` 的 `build` 用 `needs: quality` 卡在它后面**——风格检查不过就不构建、不部署。`lint.yml` 以可复用工作流（`workflow_call`）被调用，所以 `push` 触发里要排除 `main`，否则同一次推送会跑两遍。
+- **CI 顺序：`.github/workflows/lint.yml`（`format:check` → `lint` → `build`）**。仓库已不再使用 GitHub Pages，`deploy.yml` 已删除；部署由维护者本地 `pnpm deploy` 完成，因此 CI 里的 `build` 就是发版前唯一的构建校验。
 - **TypeScript 是别名安装的**：`"typescript": "npm:@typescript/typescript6@^6.0.2"`。原因是类型化 lint 的 `typescript-eslint` 目前硬性拒绝 TS 7（启动即抛错），官方给的做法就是让 lint 工具走 TS 6 的 API（见 TS 7.0 发布说明「Running Side-by-Side with TypeScript 6.0」）。本项目构建用 `nuxt generate`、不跑 `tsc`，所以拿不到 TS 7 的 `tsc` 没有影响；**升级 TypeScript 前先确认 typescript-eslint 已支持 TS 7**，否则 `pnpm lint` 会直接崩。
 
 ## 目录结构
@@ -85,7 +88,7 @@ app/                                  # srcDir
 ├─ utils/base.ts                      # withBase 垫片（自动导入）
 └─ assets/styles/                     # main.css（入口）/ tokens.css / base.css / prose.css / animation.css
 content/posts/*.md                    # 文章（唯一内容源）
-public/                               # 原样拷贝的静态资源：images/、giscus/、.nojekyll …（只放资源，不放注入式 JS/CSS）
+public/                               # 原样拷贝的静态资源：images/、giscus/、BingSiteAuth.xml …（只放资源，不放注入式 JS/CSS，也不放字体）
 server/routes/                        # atom.xml、api/posts.json、api/posts/<slug>/index.json、api/search.json
 shared/                               # site.ts（SITE / PAGE_SIZE / GISCUS）、types/、utils/
 build/post-index.ts                   # 构建期 fs 枚举：prerender 路由全集
@@ -166,11 +169,12 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 
 ## 字体与图标
 
-- 字体走 CDN（见 `nuxt.config.ts` 的 `app.head`），**仓库不保留任何字体文件**：
-  - HarmonyOS Sans SC（`harmonyos-sans-sc-webfont-splitted@1.1.0` 的 `Regular` / `Medium` / `Bold` 三个 unicode-range 分片）—— 正文与 UI；
-  - Cascadia Code（`@fontsource/cascadia-code@5.2.3`）—— 代码块等宽英文字体。
+- 字体**自包含，构建期灌注**，**仓库不保留任何字体文件，也不走 CDN**：
+  - HarmonyOS Sans SC（`harmonyos-sans-sc-webfont-splitted` 的 `Regular` / `Medium` / `Bold` 三个 unicode-range 分片）—— 正文与 UI。`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把三档 CSS 与分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 只引用这一个本地路径）；
+  - Cascadia Code（`@fontsource/cascadia-code`）—— 代码块等宽英文字体，在 `main.css` 里 `@import '@fontsource/cascadia-code/400.css'` / `700.css`，由 Vite 打包。
 - **MiSans 已彻底移除**：不要再把它加回回退链或引入同名包，正文栈以 `--font-ui` 为准。
-- **字体栈是既有决定**：`base.css` 的 `--font-ui` / `--font-code` 与 `nuxt.config.ts` 的三条 CDN `<link>` 一起改才能变，不要只改一处。
+- **字体栈是既有决定**：`base.css` 的 `--font-ui` / `--font-code`、`scripts/sync-fonts.mjs` 的字重列表、`main.css` 的 fontsource 导入是一组，改字体要一起动；不要在 `nuxt.config.ts` 里重新加回 `cdn.jsdelivr.net` 的字体 `<link>`。
+- **新增依赖需要构建脚本时**（例如 `workerd` 的平台二进制），必须在 `pnpm-workspace.yaml` 的 `allowBuilds` 里放行，否则 `pnpm install` 会以 `ERR_PNPM_IGNORED_BUILDS` 失败。
 - 图标统一用 `<UIcon name="i-lucide-xxx" />`（品牌图标 `i-simple-icons-xxx`），已**不再使用 Font Awesome**。图标集以 `@iconify-json/lucide` / `@iconify-json/simple-icons` 本地安装，构建期内联为 SVG，运行时不请求 Iconify API。**只引这两个集合**，其他集合（如 octicon、bi）没有安装，写了就是空白。
 - **新增图标必须同步 `nuxt.config.ts` 的 `icon.clientBundle.icons`**（写 `lucide:xxx` / `simple-icons:xxx`）：`scan` 只认模板里的字面量，`:name` 动态绑定（导航项、特性列表、社交链接、主题图标）的图标不登记就会退化成运行时取图。
 - `app.config.ts` 里的 `icon.mode: 'svg'` 保证输出内联 `<svg>`，别改成 `css`（否则首屏只有空占位）。
@@ -196,18 +200,18 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 - `@nuxt/content` 需要 `better-sqlite3` 原生绑定：它已在 `pnpm-workspace.yaml` 的 `allowBuilds` 中放行，**不要在 CI 上加 `--ignore-scripts`**。
 - 改了 `nuxt.config.ts` 里影响类型 / 别名的配置后跑一次 `pnpm exec nuxt prepare`，否则编辑器会报找不到自动导入。
 - 服务端路由里查询内容库必须 `queryCollection(event, 'posts')`（带 event）；文件名不要写 `[slug].json.ts` 这种「参数 + 点后缀」组合，Nitro 会把后缀并进参数——需要 JSON 后缀时用 `<dir>/index.json.ts`。
-- `nuxt generate` 之后不要再跑 `nuxt preview`（静态预设没有 server 产物）。
+- `nuxt preview` 不可用（静态预设没有 server 产物）：本地验收产物请用 `pnpm preview`（`wrangler dev`，与 Cloudflare 行为一致）或 `pnpm preview:static`（纯静态服务器）。
 
 ## Git 与协作（外部贡献者）
 
-维护者的发布流程写在 `.github/workflows/deploy.yml`，本节只约束**外部贡献者（含其使用的 AI 代理）**。
+维护者的发布流程：`pnpm deploy`（`nuxi generate` → 字体灌注 → `wrangler deploy`）。仓库里只有 `.github/workflows/lint.yml`（`format:check` → `lint` → `build`），不再有 GitHub Pages 部署流水线。本节只约束**外部贡献者（含其使用的 AI 代理）**。
 
 - **不要直接向主仓库的 `main` 推送**：一律「分支 + PR」，`main` 只接受合并。
 - 分支命名 `feat/<简述>` / `fix/<简述>` / `docs/<简述>`；同一主题的多次提交留在同一分支，不要为每个小改动开新 PR。
 - **每个提交都要能独立 `pnpm build` 通过**。改版类改动按「可回滚单元」拆（先换组件、再调样式、最后补文档），便于二分定位与单独 revert。
 - 提交信息用中文，`feat:` / `fix:` / `style:` / `refactor:` / `chore:` / `docs:` 前缀；正文说清「为什么这么做、影响面是什么」，不要复述 diff。**提交信息里不要用反引号包代码片段**——在部分 shell 下会被当命令执行。
 - PR 指向 **`PidanEggyTeam/PidanUI-Website` 的 `main`**，从自己的 fork 发起。描述里写：改动范围、取舍理由、验证方式（`pnpm build` 结果 + 浏览器看过的页面），以及是否触及下面「不要动」的清单。
-- **不要动**（属发布链路与站点身份，需先开 issue 讨论）：`nuxt.config.ts` 的 `nitro` / `icon` / `ui.theme.colors`；`shared/site.ts` 的 `SITE` 常量；`public/` 下的图片与 giscus 主题文件；`base.css` 的字体栈与 `tokens.css` 的品牌色板。**`.github/workflows/` 同样要慎重**：`lint.yml` / `deploy.yml` 里 `build` 依赖 `quality` 的先后顺序是刻意排的，改之前先想清楚「检查不过还能不能部署」。
+- **不要动**（属发布链路与站点身份，需先开 issue 讨论）：`nuxt.config.ts` 的 `nitro` / `icon` / `ui.theme.colors`；`wrangler.jsonc`；`shared/site.ts` 的 `SITE` 常量；`public/` 下的图片与 giscus 主题文件；`base.css` 的字体栈与 `tokens.css` 的品牌色板。**`.github/workflows/` 同样要慎重**：`lint.yml` 里 `format:check → lint → build` 的顺序是刻意排的，`build` 是发版前唯一的构建校验。
 - 依赖变更必须同时提交 `pnpm-lock.yaml`（CI 用 `--frozen-lockfile`）；新增需要构建脚本的依赖要在 `pnpm-workspace.yaml` 的 `allowBuilds` 里放行。
 - 不要提交产物与临时文件（`.nuxt/`、`.output/`、`.data/`、`debug.log`）；不要为了本地调试临时改 `PAGE_SIZE`、`failOnError` 这类配置后忘记还原。
 - 不要对已推送的公共分支 `rebase` / `force-push`；同步上游用 merge。
@@ -225,5 +229,6 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 7. 主题三态（auto / light / dark）切换正常，首帧不闪白；品牌色与字体观感未被改动。
 8. 新增图标已登记进 `icon.clientBundle.icons`，新增颜色 / 圆角来自变量，新增动效有 reduced-motion 分支。
 9. 没有提交构建产物、缓存或临时文件。
-10. `pnpm format:check` 与 `pnpm lint` 都通过（CI 里它们卡在部署之前，本地先跑一遍省得等）。
-11. `public/` 里只有资源（图片、giscus 皮肤、`.nojekyll`），没有新增的注入式 JS / CSS。
+10. `pnpm format:check` 与 `pnpm lint` 都通过（CI 里它们排在 `build` 之前，本地先跑一遍省得等）。
+11. `public/` 里只有资源（图片、giscus 皮肤、`BingSiteAuth.xml`），没有新增的注入式 JS / CSS，也没有字体文件。
+12. `.output/public/fonts/` 里三档字重与 `harmonyos.css` 都在，产物内没有 `cdn.jsdelivr.net` 的字体请求；`pnpm preview`（wrangler dev）下 `/about`、`/posts/`、`/posts/<slug>` 都能正常返回。

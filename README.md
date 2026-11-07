@@ -11,7 +11,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-orange)
 
-PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + TypeScript + Tailwind CSS 构建，通过 `nuxt generate` 静态生成（SSG）后部署到 GitHub Pages。
+PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + TypeScript + Tailwind CSS 构建，通过 `nuxi generate` 静态生成（SSG）后以 assets-only Worker 的形式部署到 Cloudflare Workers。
 
 </div>
 
@@ -58,13 +58,19 @@ PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + Type
 3. 在项目文件夹下执行 `pnpm install`
 4. `pnpm dev` 启动开发服务器（默认 `http://localhost:3000`）
 5. `pnpm build` 生成静态产物，输出在 **`.output/public`**
+6. `pnpm preview` 用 `wrangler dev` 按 Cloudflare 的规则预览产物；`pnpm deploy` 构建并发布到 Cloudflare Workers
 
 > [!TIP]
 > 如果 `npm install` 安装较慢，可先执行 `npm config set registry https://registry.npmmirror.com` 切换至镜像源。
 
 ## 字体与图标
 
-字体为 HarmonyOS Sans SC（400 / 500 / 700 三个字重，按 unicode-range 分片走 CDN）和 Cascadia Code 分包字体（已不再使用 MiSans），通过 CDN 加载（样式表由 `nuxt.config.ts` 的 `app.head` 注入），仓库不保留字体文件。字体回退链顺序为 HarmonyOS Sans SC → PingFang SC …（定义见 `app/assets/styles/base.css` 的 `--font-ui`）。
+字体**自包含**，仓库不保留任何字体文件，运行时也不请求任何字体 CDN：
+
+- HarmonyOS Sans SC（400 / 500 / 700 三个字重，按 unicode-range 分片）由 `harmonyos-sans-sc-webfont-splitted` 提供，`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把三档 CSS 与数百个 `woff2` 分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 引用它）；
+- Cascadia Code 由 `@fontsource/cascadia-code` 提供，在 `main.css` 里 `@import` 400 / 700 两档，交给 Vite 打包（产物是 `_nuxt/` 下的 hash 文件）。
+
+字体回退链顺序为 HarmonyOS Sans SC → PingFang SC …（定义见 `app/assets/styles/base.css` 的 `--font-ui` / `--font-code`）。已不再使用 MiSans，也不再从 jsDelivr 加载字体。
 
 图标使用 Nuxt UI 的 Iconify（Lucide + Simple Icons），图标集合以 `@iconify-json/*` 本地安装，**构建期直接内联为 SVG**，运行时不请求 Iconify API。已不再使用 Font Awesome。
 
@@ -102,7 +108,7 @@ PidanUI 并非 EggyUI 的官方分支，而是一个在 EggyUI 项目经历分�
 
 ## 部署方式
 
-本网站部署于 **GitHub Pages**，通过静态托管的方式对外提供服务。推送到 `main` 后由 `.github/workflows/deploy.yml` 自动执行 `pnpm build` → 上传 `.output/public` → 部署 Pages。站点没有后端，所有内容以静态资源形式存在，更新时需重新构建并推送。
+本网站以 **Cloudflare Workers Static Assets**（assets-only，没有 Worker 脚本）的形式对外提供服务。`wrangler.jsonc` 固定了资产目录（`.output/public`）、404 页与 HTML 处理规则，维护者执行 `pnpm deploy` 即完成「`nuxi generate` → 字体灌注 → `wrangler deploy`」。站点没有后端，所有内容以静态资源形式存在，更新时需重新构建并部署。不再使用 GitHub Pages（仓库里没有 Pages 部署流水线；`.github/workflows/lint.yml` 只做 ESLint / Prettier / 构建校验）。
 
 ## 许可证
 
