@@ -22,7 +22,7 @@ PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + Type
 - **首页**：`/`，左文右图的 Hero（项目名 / 简介 / 下载按钮 + 宣传图）→ 项目特性 → 最新动态（三张文章卡片）→ 开发人员（圆形头像）→ 加入社区 / 开发组。
 - **下载**：`/download`，页面头部是标题与通用信息，下方每个版本一张卡片（宣传图 + 版本信息 + 下载按钮），全部静态展开。
 - **新闻**：`/posts/`，由 @nuxt/content 驱动的内容区。全部是封面通栏的三行卡片（标题 / 分类·日期 / 摘要），支持分类 / 标签 / 归档（按年分页、按月折叠）、站内搜索（结果关键词高亮）与 Giscus 评论。
-- **单篇文章**：`/posts/<slug>`，不套卡片外壳，正文直接落在页面底上（56rem 可读行宽）。
+- **单篇文章**：`/posts/<slug>`，不套卡片外壳，正文直接落在页面底上（64rem 可读行宽）。
 - **关于**：`/about`，文档式双栏：左侧锚点索引，右侧长文档章节（不堆卡片，与首页刻意区分）。
 - **蛋仔专属性格测试**：`/personality-test`，关于页的小彩蛋。
 
@@ -63,6 +63,9 @@ PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + Type
 > [!TIP]
 > 如果 `npm install` 安装较慢，可先执行 `npm config set registry https://registry.npmmirror.com` 切换至镜像源。
 
+> [!NOTE]
+> `nuxt.config.ts` 或 `app.config.ts` 改动后跑一次 `pnpm exec nuxi prepare`，否则类型与 `#build/ui.css` 是旧的。
+
 ## 字体与图标
 
 字体**自包含**，仓库不保留任何字体文件，运行时也不请求任何字体 CDN：
@@ -98,8 +101,6 @@ PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + Type
 - 返回顶部浮钮 —— `app/components/BackToTop.vue`（监听 `window`，滚动超过 700px 出现）；
 - `Ctrl / ⌘ + K` 打开搜索 —— `app/plugins/shortcuts.client.ts`（输入法组合中不劫持；不再占用 `/`）。
 
-> 阅读进度条与滚动淡入已移除：前者与吸顶顶栏的视觉权重冲突，后者需要额外一份滚动监听，收益不足以抵消成本。
-
 ## 关于 PidanUI
 
 PidanUI 是一款专为 Windows & Linux 系统打造的桌面美化项目，设计灵感来源于网易游戏《蛋仔派对》。项目延续了 EggyUI 在视觉风格上的探索，同时吸取了过往项目在治理、技术与分发方式上的经验教训，重新调整了开发路线与组织方式。
@@ -108,7 +109,7 @@ PidanUI 并非 EggyUI 的官方分支，而是一个在 EggyUI 项目经历分�
 
 ## 部署方式
 
-本网站以 **Cloudflare Workers Static Assets**（assets-only，没有 Worker 脚本）的形式对外提供服务。`wrangler.jsonc` 固定了资产目录（`.output/public`）、404 页与 HTML 处理规则，维护者执行 `pnpm deploy` 即完成「`nuxi generate` → 字体灌注 → `wrangler deploy`」。站点没有后端，所有内容以静态资源形式存在，更新时需重新构建并部署。不再使用 GitHub Pages（仓库里没有 Pages 部署流水线；`.github/workflows/lint.yml` 只做 ESLint / Prettier / 构建校验）。
+本网站以 **Cloudflare Workers Static Assets**（assets-only，没有 Worker 脚本）的形式对外提供服务。`wrangler.jsonc` 固定了资产目录（`.output/public`）、404 页与 HTML 处理规则，维护者执行 `pnpm deploy` 即完成「`nuxi generate` → 字体灌注 → `wrangler deploy`」。`public/_headers` 负责响应头：`/giscus/*` 补 `Access-Control-Allow-Origin: *`（giscus iframe 跨源拉取皮肤，Workers 静态资源默认不带 CORS 头），`_nuxt` 与 `fonts` 走长缓存。站点没有后端，所有内容以静态资源形式存在，更新时需重新构建并部署。不再使用 GitHub Pages（仓库里没有 Pages 部署流水线；`.github/workflows/lint.yml` 只做 ESLint / Prettier / 构建校验）。
 
 ## 许可证
 
