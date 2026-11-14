@@ -9,8 +9,11 @@ const posts = useAllPosts();
 
 // 路由参数与 content 的 path 一一对应（/posts/<slug>）
 const requestFetch = useRequestFetch();
-const { data: doc }: { data: Ref<Record<string, any> | null> } = await useAsyncData(
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { data: doc } = await useAsyncData(
   `post:${route.path}`,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   () => requestFetch<Record<string, any>>(withBase(`/api/posts/${route.params.slug}/index.json`)),
 );
 
