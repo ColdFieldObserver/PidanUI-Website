@@ -38,12 +38,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 先跑 ESLint：ESLint 失败则直接终止本 job，后续 Prettier 与构建都不会执行
+      # 先跑 ESLint：失败则 job 直接终止，Prettier 与 Build 都不会执行
       - name: ESLint
         run: pnpm run lint
 
-      # Prettier 仅检查排版：失败不应阻断构建，因此加 continue-on-error
+      # Prettier 失败不阻断后续步骤，但结果会被记录到 outcome
       - name: Prettier (format:check)
+        id: prettier
         continue-on-error: true
         run: pnpm run format:check
 
@@ -51,3 +52,10 @@ jobs:
       # 只有 ESLint 通过才会走到这里（Prettier 失败已被 continue-on-error 放行）
       - name: Build
         run: pnpm run build
+
+      # 汇总：Prettier 失败则让整个 job 失败（Build 已经跑完了）
+      - name: Fail if Prettier failed
+        if: steps.prettier.outcome == 'failure'
+        run: |
+          echo "::error::Prettier format check failed. See the 'Prettier (format:check)' step for details."
+          exit 1
