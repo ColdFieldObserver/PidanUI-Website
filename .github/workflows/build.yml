@@ -4,7 +4,7 @@ name: Build
 # 通过 workflow_run 监听 ESLint workflow 的完成事件来判断是否需要构建。
 on:
   workflow_run:
-    workflows: ["ESLint"]
+    workflows: ['ESLint']
     types: [completed]
   workflow_dispatch:
 
