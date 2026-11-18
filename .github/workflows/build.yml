@@ -1,0 +1,44 @@
+name: Build
+
+# 构建校验：只有当 ESLint 成功时才执行；Prettier 失败不影响构建。
+# 通过 workflow_run 监听 ESLint workflow 的完成事件来判断是否需要构建。
+on:
+  workflow_run:
+    workflows: ["ESLint"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    # ESLint 成功（或手动触发）才构建；ESLint 失败则跳过构建。
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # workflow_run 触发时默认 checkout 的是默认分支，需要显式取对应的提交
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 构建同时验证预渲染：failOnError 下任何缺页都会让这一步失败
+      - name: Build
+        run: pnpm run build
