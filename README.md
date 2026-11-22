@@ -7,7 +7,7 @@
 ![Last Commit](https://img.shields.io/github/last-commit/PidanEggyTeam/PidanUI-Website?label=Last%20Commit)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4.6.4-00DC82?logo=Nuxt&logoColor=white)](https://nuxt.com/)
 [![Vue](https://img.shields.io/badge/Vue-3.5.45-4FC08D?logo=Vue.js&logoColor=white)](https://cn.vuejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-3178C6?logo=TypeScript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0.2-3178C6?logo=TypeScript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-orange)
 
@@ -70,7 +70,7 @@ PidanUI 项目的官方网站，使用 Nuxt 4 + @nuxt/content + Nuxt UI 4 + Type
 
 字体**自包含**，仓库不保留任何字体文件，运行时也不请求任何字体 CDN：
 
-- HarmonyOS Sans SC（400 / 500 / 700 三个字重，按 unicode-range 分片）由 `harmonyos-sans-sc-webfont-splitted` 提供，`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把三档 CSS 与数百个 `woff2` 分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 引用它）；
+- HarmonyOS Sans SC（400 / 500 / 600 / 700 四个字重，按 unicode-range 分片）由 `harmonyos-sans-sc-webfont-splitted` 提供，`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把四档 CSS 与数百个 `woff2` 分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 引用它）；
 - Cascadia Code 由 `@fontsource/cascadia-code` 提供，在 `main.css` 里 `@import` 400 / 700 两档，交给 Vite 打包（产物是 `_nuxt/` 下的 hash 文件）。
 
 字体回退链顺序为 HarmonyOS Sans SC → PingFang SC …（定义见 `app/assets/styles/base.css` 的 `--font-ui` / `--font-code`）。已不再使用 MiSans，也不再从 jsDelivr 加载字体。

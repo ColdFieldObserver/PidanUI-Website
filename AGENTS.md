@@ -47,7 +47,6 @@
 pnpm dev                       # 本地开发（默认 http://localhost:3000）
 pnpm build                     # 生产构建 = nuxi generate + + 生成 sitemap.xml + 字体灌注，产物在 .output/public
 pnpm preview                   # wrangler dev：按 Cloudflare 的规则跑同一份产物
-pnpm preview:static            # 纯静态服务器（不带 Cloudflare 行为，备用）
 pnpm deploy                    # pnpm build + wrangler deploy
 pnpm exec nuxt prepare         # 生成 .nuxt 类型与别名（改 nuxt.config 后手动跑一次）
 pnpm lint                      # ESLint：找「可能出错的地方」
@@ -170,7 +169,7 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 ## 字体与图标
 
 - 字体**自包含，构建期灌注**，**仓库不保留任何字体文件，也不走 CDN**：
-  - HarmonyOS Sans SC（`harmonyos-sans-sc-webfont-splitted` 的 `Regular` / `Medium` / `Bold` 三个 unicode-range 分片）—— 正文与 UI。`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把三档 CSS 与分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 只引用这一个本地路径）；
+  - HarmonyOS Sans SC（`harmonyos-sans-sc-webfont-splitted` 的 `Regular` / `Medium` / `Semibold` / `Bold` 四个 unicode-range 分片）—— 正文与 UI。`nuxi generate` **之后**由 `scripts/sync-fonts.mjs` 把四档 CSS 与分片平铺复制进 `.output/public/fonts/`，并生成 `fonts/harmonyos.css`（`nuxt.config.ts` 的 `app.head` 只引用这一个本地路径）；
   - Cascadia Code（`@fontsource/cascadia-code`）—— 代码块等宽英文字体，在 `main.css` 里 `@import '@fontsource/cascadia-code/400.css'` / `700.css`，由 Vite 打包。
 - **MiSans 已彻底移除**：不要再把它加回回退链或引入同名包，正文栈以 `--font-ui` 为准。
 - **字体栈是既有决定**：`base.css` 的 `--font-ui` / `--font-code`、`scripts/sync-fonts.mjs` 的字重列表、`main.css` 的 fontsource 导入是一组，改字体要一起动；不要在 `nuxt.config.ts` 里重新加回 `cdn.jsdelivr.net` 的字体 `<link>`。
@@ -200,7 +199,7 @@ content.config.ts / nuxt.config.ts    # 内容集合定义 / 站点配置
 - `@nuxt/content` 用 Node 内置的 `node:sqlite`（`experimental.sqliteConnector: 'native'`），**不需要 `better-sqlite3`**，也没有对应的 `allowBuilds` 条目；Node 22 会打一条 `ExperimentalWarning`，属正常。
 - 改了 `nuxt.config.ts` 里影响类型 / 别名的配置后跑一次 `pnpm exec nuxt prepare`，否则编辑器会报找不到自动导入。
 - 服务端路由里查询内容库必须 `queryCollection(event, 'posts')`（带 event）；文件名不要写 `[slug].json.ts` 这种「参数 + 点后缀」组合，Nitro 会把后缀并进参数——需要 JSON 后缀时用 `<dir>/index.json.ts`。
-- `nuxt preview` 不可用（静态预设没有 server 产物）：本地验收产物请用 `pnpm preview`（`wrangler dev`，与 Cloudflare 行为一致）或 `pnpm preview:static`（纯静态服务器）。
+- `nuxt preview` 不可用（静态预设没有 server 产物）：本地验收产物请用 `pnpm preview`（`wrangler dev`，与 Cloudflare 行为一致）。
 
 ## Git 与协作（外部贡献者）
 

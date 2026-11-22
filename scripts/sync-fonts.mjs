@@ -4,7 +4,7 @@
  * 为什么不在 public/ 里存字体：仓库要零字体文件（授权与体积双重考虑）。
  * 为什么不交给 Vite：CJK 分包有几百个 woff2，交给构建图会让构建变慢、产物结构不可控。
  *
- * 只取 400 / 500 / 700 三档，对应 font-normal / font-medium / font-bold。
+ * 只取 400 / 500 / 600 / 700 四档，对应 font-normal / font-medium / font-semibold / font-bold。
  */
 import { createRequire } from 'node:module';
 import {
@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PKG = 'harmonyos-sans-sc-webfont-splitted';
-const WEIGHTS = ['Regular', 'Medium', 'Bold'];
+const WEIGHTS = ['Regular', 'Medium', 'Semibold', 'Bold'];
 
 const require = createRequire(import.meta.url);
 const distDir = dirname(require.resolve(PKG));

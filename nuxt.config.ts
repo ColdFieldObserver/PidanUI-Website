@@ -30,6 +30,7 @@ const FONT_LINKS = isDev
   ? [
       { rel: 'stylesheet', href: '/fonts/Regular.css' },
       { rel: 'stylesheet', href: '/fonts/Medium.css' },
+      { rel: 'stylesheet', href: '/fonts/Semibold.css' },
       { rel: 'stylesheet', href: '/fonts/Bold.css' },
     ]
   : [{ rel: 'stylesheet', href: '/fonts/harmonyos.css' }];
@@ -85,7 +86,7 @@ export default defineNuxtConfig({
         // 带 crossorigin 会另开一条 CORS 连接池，反而复用不上。
         { rel: 'preconnect', href: 'https://feed-pulse.com' },
         { rel: 'dns-prefetch', href: 'https://feed-pulse.com' },
-        // 界面字体（自包含）：HarmonyOS Sans SC 的 400 / 500 / 700 三档分片。
+        // 界面字体（自包含）：HarmonyOS Sans SC 的 400 / 500 / 600 / 700 四档分片。
         // 生产由 scripts/sync-fonts.mjs 生成 /fonts/harmonyos.css；开发由下面的
         // nitro.publicAssets 直接挂 npm 包目录。仓库不保留字体文件，也不走 CDN。
         // Cascadia Code 走 @fontsource，由 Vite 打包（见 main.css）。

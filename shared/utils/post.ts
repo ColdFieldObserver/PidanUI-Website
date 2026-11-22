@@ -76,11 +76,11 @@ export function stripMarkdown(md: string): string {
 
 /** 绝对地址（用于 SEO / feed） */
 export function absoluteUrl(pathname: string): string {
-  return new URL(pathname, SITE.newsUrl).href;
+  return new URL(pathname, SITE.mainUrl).href;
 }
 
 /** 资源绝对地址（外链 / data: 原样返回） */
 export function absoluteAsset(src: string): string {
   if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src) || src.startsWith('data:')) return src;
-  return new URL(src, SITE.newsUrl).href;
+  return new URL(src, SITE.mainUrl).href;
 }

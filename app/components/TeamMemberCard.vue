@@ -13,9 +13,9 @@ function isBlankLink(link: string | undefined): boolean {
 
 <template>
   <UPageCard
-    variant="outline"
+    variant="subtle"
     class="w-[220px] shrink-0 snap-start"
-    :ui="{ container: 'flex flex-col items-center gap-3 p-5 text-center lg:flex' }"
+    :ui="{ container: 'flex flex-col items-center gap-2 p-5 text-center lg:flex' }"
   >
     <UAvatar
       size="3xl"
@@ -26,16 +26,46 @@ function isBlankLink(link: string | undefined): boolean {
     <h3 class="mt-1 text-base font-semibold text-default">{{ member.name }}</h3>
     <p class="text-[13px] leading-[1.6] text-toned">{{ member.role }}</p>
 
-    <!-- “前往B站主页”按钮：每个成员都显示，只是在没有B站主页链接（或者链接为空白）时禁用 -->
-    <UButton
-      :href="member.bilibiliSpaceLink ?? 'https://space.bilibili.com/'"
-      target="_blank"
-      variant="solid"
-      color="primary"
-      icon="i-simple-icons-bilibili"
-      :disabled="isBlankLink(member.bilibiliSpaceLink)"
-    >
-      前往B站主页
-    </UButton>
+    <div class="flex gap-2">
+      <UButton
+        :href="member.bilibiliLink ?? 'https://space.bilibili.com/'"
+        target="_blank"
+        variant="ghost"
+        :color="isBlankLink(member.bilibiliLink) ? 'neutral' : 'primary'"
+        icon="i-simple-icons-bilibili"
+        :disabled="isBlankLink(member.bilibiliLink)"
+        :title="
+          isBlankLink(member.bilibiliLink)
+            ? '该成员未提供B站主页链接'
+            : `前往“${member.name}”的B站主页`
+        "
+      />
+      <UButton
+        :href="member.githubLink ?? 'https://github.com/'"
+        target="_blank"
+        variant="ghost"
+        :color="isBlankLink(member.githubLink) ? 'neutral' : 'primary'"
+        icon="i-simple-icons-github"
+        :disabled="isBlankLink(member.githubLink)"
+        :title="
+          isBlankLink(member.githubLink)
+            ? '该成员未提供GitHub主页链接'
+            : `前往“${member.name}”的GitHub主页`
+        "
+      />
+      <UButton
+        :href="member.personWebsiteLink ?? 'https://example.com/'"
+        target="_blank"
+        variant="ghost"
+        :color="isBlankLink(member.personWebsiteLink) ? 'neutral' : 'primary'"
+        icon="i-lucide-globe"
+        :disabled="isBlankLink(member.personWebsiteLink)"
+        :title="
+          isBlankLink(member.personWebsiteLink)
+            ? '该成员未提供个人网站链接'
+            : `前往“${member.name}”的个人网站`
+        "
+      />
+    </div>
   </UPageCard>
 </template>

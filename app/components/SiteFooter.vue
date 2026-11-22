@@ -58,7 +58,7 @@ const year: string = '2026';
                 rel="noopener"
               >
                 <UIcon :name="link.icon" class="size-4 shrink-0" aria-hidden="true" />
-                <span class="truncate">{{ link.name }}</span>
+                <span class="truncate">{{ link.name ?? '友情链接条目' }}</span>
               </a>
             </div>
           </div>
