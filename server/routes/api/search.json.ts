@@ -1,3 +1,4 @@
+import { defineEventHandler } from 'nuxt/server';
 import { queryCollection } from '@nuxt/content/server';
 import { byDateDesc, toBasePost } from '#shared/utils/post';
 import { mdcToText } from '#shared/utils/mdc';
