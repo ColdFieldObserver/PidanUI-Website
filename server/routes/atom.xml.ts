@@ -1,3 +1,4 @@
+import { defineEventHandler } from 'nuxt/server';
 import { queryCollection } from '@nuxt/content/server';
 import { SITE } from '#shared/site';
 import { parsePostDate } from '#shared/utils/date';
@@ -69,6 +70,6 @@ export default defineEventHandler(async (event) => {
     '',
   ].join('\n');
 
-  setHeader(event, 'content-type', 'application/atom+xml; charset=utf-8');
+  event.res.headers.set('content-type', 'application/atom+xml; charset=utf-8');
   return feed;
 });

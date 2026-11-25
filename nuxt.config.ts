@@ -2,8 +2,8 @@ import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
-import { buildRoutes } from './build/post-index';
-import { rehypeExternalLinksBlank } from './build/rehype-external-links';
+import { buildRoutes } from './build/post-index.ts';
+import { rehypeExternalLinksBlank } from './build/rehype-external-links.ts';
 
 // ============================================================
 // PidanUI 官网 · Nuxt 站点配置
@@ -43,10 +43,10 @@ export default defineNuxtConfig({
 
   modules: ['@nuxt/content', '@nuxt/ui'],
 
+  future: { compatibilityVersion: 5 },
+
   // ============================================================
   // Nuxt UI 接入策略（渐进式接管）
-  //   - 保留样式层自建的 reset 与设计令牌，不引入 Tailwind Preflight
-  //     （@nuxt/ui 的 CSS 入口本身不含 preflight，见 main.css 注释）
   //   - 主题三态仍由 useTheme.ts 独占，因此关掉 colorMode，
   //     改由 useTheme 同时写 data-theme 与 .dark class
   //   - 字体由 CDN <link> 提供，关掉 @nuxt/fonts 避免接管
